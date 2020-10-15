@@ -229,9 +229,9 @@ def copy_weight(modelyolov5,model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp.cfg', help='cfg file path')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/yolov3-spp-ultralytics.pt', help='sparse model weights')
+    parser.add_argument('--weights', type=str, default='weights/yolov5s.pt', help='sparse model weights')
     parser.add_argument('--percent', type=float, default=0.8, help='channel prune percent')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     #                  and modelyolov5.state_dict()[k].shape == v.shape}
     # modelyolov5.load_state_dict(ckpt['model'], strict=False)
 
-    modelyolov5=torch.load('last.pt', map_location=device)['model'].float()  # load FP32 model
+    modelyolov5=torch.load('weights/last.pt', map_location=device)['model'].float()  # load FP32 model
 
     copy_weight(modelyolov5, model)
 

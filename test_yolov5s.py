@@ -416,9 +416,9 @@ if __name__ == '__main__':
 
     # modelyolov5=torch.load('last.pt', map_location=device)['model'].float().eval()
 
-    model_prune = Darknet('cfg/prune_0.8_yolov3-spp.cfg', (img_size, img_size)).to(device)
+    model_prune = Darknet('cfg/prune_0.8_yolov5s.cfg', (img_size, img_size)).to(device)
     initialize_weights(model_prune)
-    model_prune.load_state_dict(torch.load('weights/prune_0.8_yolov3-spp-ultralytics.pt')['model'])
+    model_prune.load_state_dict(torch.load('weights/prune_0.8_yolov5s.pt')['model'])
 
     # model_prune=torch.load('last_prune.pt')['model'].float().eval()
 
