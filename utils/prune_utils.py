@@ -68,6 +68,9 @@ def parse_module_defs2(module_defs):
             if module_defs[i+1]['type'] == 'route' and 'groups' in module_defs[i+1]:
                 ignore_idx.add(i)
 
+        elif module_def['type'] == 'convolutional_noconv':
+            CBL_idx.append(i)
+
         elif module_def['type'] == 'upsample':
             #上采样层前的卷积层不裁剪
             ignore_idx.add(i - 1)
@@ -458,6 +461,11 @@ def update_activation(i, pruned_model, activation, CBL_idx):
             next_bn.running_mean.data.sub_(offset)
         else:
             next_conv.bias.data.add_(offset)
+    # elif pruned_model.module_defs[next_idx]['type'] == 'convolutional_noconv':
+
+
+def update_activation_nconv(i, pruned_model, activation, CBL_idx):
+    pass
 
 def prune_model_keep_size2(model, prune_idx, CBL_idx, CBLidx2mask):
 
@@ -503,7 +511,22 @@ def prune_model_keep_size2(model, prune_idx, CBL_idx, CBLidx2mask):
                 actv1 = activations[i + from_layers[0]]
                 actv2 = activations[i + from_layers[1] if from_layers[1] < 0 else from_layers[1]]
                 activation = torch.cat((actv1, actv2))
-                update_activation(i, pruned_model, activation, CBL_idx)
+                # update_activation(i, pruned_model, activation, CBL_idx)
+                #update_activation_nconv
+                next_idx = i + 1
+                if pruned_model.module_defs[next_idx]['type'] == 'convolutional_noconv':
+                    next_conv1 = pruned_model.module_list[i + from_layers[0]][0]
+                    next_conv2 = pruned_model.module_list[i + from_layers[1] if from_layers[1] < 0 else from_layers[1]][0]
+                    conv_sum1 = next_conv1.weight.data.sum(dim=(2, 3))
+                    conv_sum2 = next_conv2.weight.data.sum(dim=(2, 3))
+                    offset1 = conv_sum1.matmul(actv1.reshape(-1, 1)).reshape(-1)
+                    offset2 = conv_sum2.matmul(actv2.reshape(-1, 1)).reshape(-1)
+                    offset=torch.cat((offset1, offset2))
+                    if next_idx in CBL_idx:
+                        next_bn = pruned_model.module_list[next_idx][0]
+                        next_bn.running_mean.data.sub_(offset)
+                else:
+                    update_activation(i, pruned_model, activation, CBL_idx)
             activations.append(activation)
 
         elif model_def['type'] == 'upsample':
@@ -517,8 +540,9 @@ def prune_model_keep_size2(model, prune_idx, CBL_idx, CBLidx2mask):
             activations.append(None)
 
         elif model_def['type'] == 'convolutional_nobias':
-            activation = torch.zeros(int(model_def['filters'])).cuda()
-            activations.append(activation)
+            activations.append(activations[i - 1])
+            # activation = torch.zeros(int(model_def['filters'])).cuda()
+            # activations.append(activation)
 
         elif model_def['type'] == 'convolutional_noconv':
             activation = torch.zeros(int(model_def['filters'])).cuda()
