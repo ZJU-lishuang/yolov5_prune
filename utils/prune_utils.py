@@ -378,8 +378,6 @@ def init_weights_from_loose_model(compact_model, loose_model, CBL_idx, Conv_idx,
             compact_conv2 = compact_model.module_list[layers[1]][0]
             loose_conv1 = loose_model.module_list[layers[0]][0]
             loose_conv2 = loose_model.module_list[layers[1]][0]
-            # in_channel_idx1=in_channel_idx[:64]
-            # in_channel_idx2 = in_channel_idx[64:]
             tmp1=loose_conv1.weight.data[:, in_channel_idx1, :, :].clone()
             tmp2 = loose_conv2.weight.data[:, in_channel_idx2, :, :].clone()
             half_num=int(len(CBLidx2mask[idx])/2)
@@ -387,11 +385,6 @@ def init_weights_from_loose_model(compact_model, loose_model, CBL_idx, Conv_idx,
             out_channel_idx2 = np.argwhere(CBLidx2mask[idx][half_num:])[:, 0].tolist()
             compact_conv1.weight.data = tmp1[out_channel_idx1, :, :, :].clone()
             compact_conv2.weight.data = tmp2[out_channel_idx2, :, :, :].clone()
-
-            # compact_conv_weight=torch.cat([compact_model.module_list[i][0].weight for i in layers], 1)
-            # loose_conv_weight = torch.cat([loose_model.module_list[i][0].weight for i in layers], 1)
-            # tmp = loose_conv_weight.data[:, in_channel_idx, :, :].clone()
-            # compact_conv_weight.data = tmp[out_channel_idx, :, :, :].clone()
         else:
             compact_conv, loose_conv = compact_CBL[0], loose_CBL[0]
             tmp = loose_conv.weight.data[:, in_channel_idx, :, :].clone()

@@ -230,7 +230,8 @@ if __name__ == '__main__':
     parser.add_argument('--cfg', type=str, default='cfg/yolov5s.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
     parser.add_argument('--weights', type=str, default='weights/last.pt', help='sparse model weights')
-    parser.add_argument('--percent', type=float, default=0.4, help='channel prune percent')
+    parser.add_argument('--global_percent', type=float, default=0.4, help='global channel prune percent')
+    parser.add_argument('--layer_keep', type=float, default=0.01, help='channel keep percent per layer')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
     print(opt)
@@ -251,90 +252,19 @@ if __name__ == '__main__':
         origin_model_metric = eval_model(model)
     origin_nparameters = obtain_num_parameters(model)
 
-    CBL_idx, Conv_idx, prune_idx,shortcut_idx,shortcut_all= parse_module_defs2(model.module_defs)
+    CBL_idx, Conv_idx, prune_idx, _, _= parse_module_defs2(model.module_defs)
 
 
-    sort_prune_idx=[idx for idx in prune_idx if idx not in shortcut_idx]
 
-    #将所有要剪枝的BN层的α参数，拷贝到bn_weights列表
-    bn_weights = gather_bn_weights(model.module_list, sort_prune_idx)
+    bn_weights = gather_bn_weights(model.module_list, prune_idx)
 
-    #torch.sort返回二维列表，第一维是排序后的值列表，第二维是排序后的值列表对应的索引
     sorted_bn = torch.sort(bn_weights)[0]
+    sorted_bn, sorted_index = torch.sort(bn_weights)
+    thresh_index = int(len(bn_weights) * opt.global_percent)
+    thresh = sorted_bn[thresh_index].cuda()
 
+    print(f'Global Threshold should be less than {thresh:.4f}.')
 
-    #避免剪掉所有channel的最高阈值(每个BN层的gamma的最大值的最小值即为阈值上限)
-    highest_thre = []
-    for idx in sort_prune_idx:
-        #.item()可以得到张量里的元素值
-        # highest_thre.append(model.module_list[idx][1].weight.data.abs().max().item())
-        highest_thre.append(model.module_list[idx][1].weight.data.abs().max().item() if type(
-            model.module_list[idx][1]).__name__ is 'BatchNorm2d' else model.module_list[idx][
-            0].weight.data.abs().max().item())
-    highest_thre = min(highest_thre)
-
-    # 找到highest_thre对应的下标对应的百分比
-    percent_limit = (sorted_bn==highest_thre).nonzero().item()/len(bn_weights)
-
-    print(f'Suggested Threshold should be less than {highest_thre:.4f}.')
-    print(f'The corresponding prune ratio is {percent_limit:.3f},but you can set higher.')
-
-
-    def prune_and_eval(model, sorted_bn, percent=.0):
-        model_copy = deepcopy(model)
-        thre_index = int(len(sorted_bn) * percent)
-        #获得α参数的阈值，小于该值的α参数对应的通道，全部裁剪掉
-        thre1 = sorted_bn[thre_index]
-
-        print(f'Channels with Gamma value less than {thre1:.6f} are pruned!')
-
-        remain_num = 0
-        idx_new=dict()
-        for idx in prune_idx:
-            
-            if idx not in shortcut_idx:
-                
-                # bn_module = model_copy.module_list[idx][1]
-                bn_module = model_copy.module_list[idx][1] if type(
-                    model_copy.module_list[idx][1]).__name__ is 'BatchNorm2d' else model_copy.module_list[idx][0]
-
-                mask = obtain_bn_mask(bn_module, thre1)
-                #记录剪枝后，每一层卷积层对应的mask
-                # idx_new[idx]=mask.cpu().numpy()
-                idx_new[idx]=mask
-                remain_num += int(mask.sum())
-                bn_module.weight.data.mul_(mask)
-                #bn_module.bias.data.mul_(mask*0.0001)
-            else:
-                
-                bn_module = model_copy.module_list[idx][1]
-               
-
-                mask=idx_new[shortcut_idx[idx]]
-                idx_new[idx]=mask
-                
-     
-                remain_num += int(mask.sum())
-                bn_module.weight.data.mul_(mask)
-                
-            #print(int(mask.sum()))
-
-        with torch.no_grad():
-            mAP = eval_model(model_copy)[0][2]
-
-        print(f'Number of channels has been reduced from {len(sorted_bn)} to {remain_num}')
-        print(f'Prune ratio: {1-remain_num/len(sorted_bn):.3f}')
-        print(f'mAP of the pruned model is {mAP:.4f}')
-
-        return thre1
-
-    percent = opt.percent
-    threshold = prune_and_eval(model, sorted_bn, percent)
-
-
-
-    #****************************************************************
-    #虽然上面已经能看到剪枝后的效果，但是没有生成剪枝后的模型结构，因此下面的代码是为了生成新的模型结构并拷贝旧模型参数到新模型
 
 
 
@@ -345,99 +275,111 @@ if __name__ == '__main__':
         total = 0
         num_filters = []
         filters_mask = []
-        idx_new=dict()
-        #CBL_idx存储的是所有带BN的卷积层（YOLO层的前一层卷积层是不带BN的）
         for idx in CBL_idx:
             # bn_module = model.module_list[idx][1]
-            bn_module = model.module_list[idx][1] if type(model.module_list[idx][1]).__name__ is 'BatchNorm2d' else \
-            model.module_list[idx][0]
+            bn_module = model.module_list[idx][1] if type(
+                model.module_list[idx][1]).__name__ is 'BatchNorm2d' else model.module_list[idx][0]
             if idx in prune_idx:
-                if idx not in shortcut_idx:
 
-                    mask = obtain_bn_mask(bn_module, thre).cpu().numpy()
-                    if type(model.module_list[idx][0]).__name__ is 'BatchNorm2d':
-                        half_num = int(len(mask) / 2)
-                        mask1 = mask[:half_num]
-                        mask2 = mask[half_num:]
-                        remain1 = int(mask1.sum())
-                        remain2 = int(mask2.sum())
-                        if remain1 == 0 or remain2 == 0:
-                            print("Channels would be all pruned!")
-                            raise Exception
-
-                    idx_new[idx]=mask
-                    remain = int(mask.sum())
-                    pruned = pruned + mask.shape[0] - remain
-
-                    # if remain == 0:
-                    #     print("Channels would be all pruned!")
-                    #     raise Exception
-
-                    # print(f'layer index: {idx:>3d} \t total channel: {mask.shape[0]:>4d} \t '
-                    #     f'remaining channel: {remain:>4d}')
-                else:
-                    mask=idx_new[shortcut_idx[idx]]
-                    idx_new[idx]=mask
-                    remain= int(mask.sum())
-                    pruned = pruned + mask.shape[0] - remain
-                    
-                if remain == 0:
-                    # print("Channels would be all pruned!")
-                    # raise Exception
-                    max_value = bn_module.weight.data.abs().max()
-                    mask = obtain_bn_mask(bn_module, max_value).cpu().numpy()
-                    remain = int(mask.sum())
-                    pruned = pruned + mask.shape[0] - remain
+                weight_copy = bn_module.weight.data.abs().clone()
+                
+                channels = weight_copy.shape[0] #
+                min_channel_num = int(channels * opt.layer_keep) if int(channels * opt.layer_keep) > 0 else 1
+                mask = weight_copy.gt(thresh).float()
+                
+                if int(torch.sum(mask)) < min_channel_num: 
+                    _, sorted_index_weights = torch.sort(weight_copy,descending=True)
+                    mask[sorted_index_weights[:min_channel_num]]=1. 
+                remain = int(mask.sum())
+                pruned = pruned + mask.shape[0] - remain
 
                 print(f'layer index: {idx:>3d} \t total channel: {mask.shape[0]:>4d} \t '
                         f'remaining channel: {remain:>4d}')
             else:
-                mask = np.ones(bn_module.weight.data.shape)
+                mask = torch.ones(bn_module.weight.data.shape)
                 remain = mask.shape[0]
 
             total += mask.shape[0]
             num_filters.append(remain)
-            filters_mask.append(mask.copy())
+            filters_mask.append(mask.clone())
 
-        #因此，这里求出的prune_ratio,需要裁剪的α参数/cbl_idx中所有的α参数
         prune_ratio = pruned / total
         print(f'Prune channels: {pruned}\tPrune ratio: {prune_ratio:.3f}')
 
         return num_filters, filters_mask
 
-    num_filters, filters_mask = obtain_filters_mask(model, threshold, CBL_idx, prune_idx)
-
-
-    #CBLidx2mask存储CBL_idx中，每一层BN层对应的mask
+    num_filters, filters_mask = obtain_filters_mask(model, thresh, CBL_idx, prune_idx)
     CBLidx2mask = {idx: mask for idx, mask in zip(CBL_idx, filters_mask)}
+    CBLidx2filters = {idx: filters for idx, filters in zip(CBL_idx, num_filters)}
+
+    for i in model.module_defs:
+        if i['type'] == 'shortcut':
+            i['is_access'] = False
+
+    print('merge the mask of layers connected to shortcut!')
+    merge_mask(model, CBLidx2mask, CBLidx2filters)
+
+
+
+    def prune_and_eval(model, CBL_idx, CBLidx2mask):
+        model_copy = deepcopy(model)
+
+        for idx in CBL_idx:
+            # bn_module = model_copy.module_list[idx][1]
+            bn_module = model_copy.module_list[idx][1] if type(
+                model_copy.module_list[idx][1]).__name__ is 'BatchNorm2d' else model_copy.module_list[idx][0]
+            mask = CBLidx2mask[idx].cuda()
+            bn_module.weight.data.mul_(mask)
+
+        with torch.no_grad():
+            mAP = eval_model(model_copy)[0][2]
+
+        print(f'mask the gamma as zero, mAP of the model is {mAP:.4f}')
+
+
+    prune_and_eval(model, CBL_idx, CBLidx2mask)
+
+
+    for i in CBLidx2mask:
+        CBLidx2mask[i] = CBLidx2mask[i].clone().cpu().numpy()
+
 
 
     pruned_model = prune_model_keep_size2(model, prune_idx, CBL_idx, CBLidx2mask)
-    print("\nnow prune the model but keep size,(actually add offset of BN beta to next layer), let's see how the mAP goes")
+    print("\nnow prune the model but keep size,(actually add offset of BN beta to following layers), let's see how the mAP goes")
 
     with torch.no_grad():
         eval_model(pruned_model)
 
+    for i in model.module_defs:
+        if i['type'] == 'shortcut':
+            i.pop('is_access')
 
+    # compact_module_defs = deepcopy(model.module_defs)
+    # for idx in CBL_idx:
+    #     assert compact_module_defs[idx]['type'] == 'convolutional'
+    #     compact_module_defs[idx]['filters'] = str(CBLidx2filters[idx])
 
-    #获得原始模型的module_defs，并修改该defs中的卷积核数量
     compact_module_defs = deepcopy(model.module_defs)
-    for idx, num in zip(CBL_idx, num_filters):
-        assert compact_module_defs[idx]['type'] == 'convolutional' or compact_module_defs[idx]['type'] == 'convolutional_noconv'
+    for idx in CBL_idx:
+        assert compact_module_defs[idx]['type'] == 'convolutional' or compact_module_defs[idx][
+            'type'] == 'convolutional_noconv'
+        num=CBLidx2filters[idx]
         compact_module_defs[idx]['filters'] = str(num)
         if compact_module_defs[idx]['type'] == 'convolutional_noconv':
-            model_def=compact_module_defs[idx-1] #route
-            assert compact_module_defs[idx-1]['type'] == 'route'
+            model_def = compact_module_defs[idx - 1]  # route
+            assert compact_module_defs[idx - 1]['type'] == 'route'
             from_layers = [int(s) for s in model_def['layers'].split(',')]
             assert compact_module_defs[idx - 1 + from_layers[0]]['type'] == 'convolutional_nobias'
-            assert compact_module_defs[idx-1 + from_layers[1] if from_layers[1] < 0 else from_layers[1]]['type'] == 'convolutional_nobias'
+            assert compact_module_defs[idx - 1 + from_layers[1] if from_layers[1] < 0 else from_layers[1]][
+                       'type'] == 'convolutional_nobias'
             half_num = int(len(CBLidx2mask[idx]) / 2)
-            mask1=CBLidx2mask[idx][:half_num]
+            mask1 = CBLidx2mask[idx][:half_num]
             mask2 = CBLidx2mask[idx][half_num:]
             remain1 = int(mask1.sum())
             remain2 = int(mask2.sum())
-            compact_module_defs[idx - 1 + from_layers[0]]['filters']=remain1
-            compact_module_defs[idx-1 + from_layers[1] if from_layers[1] < 0 else from_layers[1]]['filters'] =remain2
+            compact_module_defs[idx - 1 + from_layers[0]]['filters'] = remain1
+            compact_module_defs[idx - 1 + from_layers[1] if from_layers[1] < 0 else from_layers[1]]['filters'] = remain2
 
 
     compact_model = Darknet([model.hyperparams.copy()] + compact_module_defs, (img_size, img_size)).to(device)
@@ -459,18 +401,16 @@ if __name__ == '__main__':
 
         return avg_infer_time, output
 
-    print('testing Inference time...')
+    print('testing inference time...')
     pruned_forward_time, pruned_output = obtain_avg_forward_time(random_input, pruned_model)
     compact_forward_time, compact_output = obtain_avg_forward_time(random_input, compact_model)
 
 
-    # 在测试集上测试剪枝后的模型, 并统计模型的参数数量
-    print('testing final model')
+    print('testing the final model...')
     with torch.no_grad():
         compact_model_metric = eval_model(compact_model)
 
 
-    # 比较剪枝前后参数数量的变化、指标性能的变化
     metric_table = [
         ["Metric", "Before", "After"],
         ["mAP", f'{origin_model_metric[0][2]:.6f}', f'{compact_model_metric[0][2]:.6f}'],
@@ -480,12 +420,12 @@ if __name__ == '__main__':
     print(AsciiTable(metric_table).table)
 
 
-    # 生成剪枝后的cfg文件并保存模型
-    pruned_cfg_name = opt.cfg.replace('/', f'/prune_{percent}_')
+
+    pruned_cfg_name = opt.cfg.replace('/', f'/prune_{opt.global_percent}_keep_{opt.layer_keep}_')
     pruned_cfg_file = write_cfg(pruned_cfg_name, [model.hyperparams.copy()] + compact_module_defs)
     print(f'Config file has been saved: {pruned_cfg_file}')
 
-    compact_model_name = opt.weights.replace('/', f'/prune_{percent}_')
+    compact_model_name = opt.weights.replace('/', f'/prune_{opt.global_percent}_keep_{opt.layer_keep}_')
     if compact_model_name.endswith('.pt'):
         compact_model_name = compact_model_name.replace('.pt', '.weights')
     save_weights(compact_model, path=compact_model_name)
