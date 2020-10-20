@@ -5,7 +5,7 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 
 import test  # import test.py to get mAP after each epoch
-from models import *
+from modelsori import *
 from utils.datasets import *
 from utils.utils import *
 from utils.prune_utils import *
