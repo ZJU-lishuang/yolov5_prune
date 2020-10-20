@@ -406,6 +406,7 @@ if __name__ == '__main__':
     img_size = opt.img_size
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    #the way of loading yolov5s
     # ckpt = torch.load('last_s.pt', map_location=device)  # load checkpoint
     # modelyolov5 = Model('cfg/yolov5s.yaml', nc=2).to(device)
     # exclude = ['anchor']  # exclude keys
@@ -414,14 +415,18 @@ if __name__ == '__main__':
     #                  and modelyolov5.state_dict()[k].shape == v.shape}
     # modelyolov5.load_state_dict(ckpt['model'], strict=False)
 
+    #another way of loading yolov5s
     # modelyolov5=torch.load('last.pt', map_location=device)['model'].float().eval()
 
+    #load prune model
     model_prune = Darknet('cfg/prune_0.8_yolov5s.cfg', (img_size, img_size)).to(device)
     initialize_weights(model_prune)
     model_prune.load_state_dict(torch.load('weights/prune_0.8_yolov5s.pt')['model'])
 
+    #load prune finetune model
     # model_prune=torch.load('last_prune.pt')['model'].float().eval()
 
+    #load yolov5s from cfg
     # model = Darknet('cfg/yolov5s.cfg', (img_size, img_size)).to(device)
     # copy_weight(modelyolov5,model)
 

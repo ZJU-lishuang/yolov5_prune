@@ -229,7 +229,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='cfg/yolov5s.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/last.pt', help='sparse model weights')
+    parser.add_argument('--weights', type=str, default='weights/last_s_to_prune1_100.pt', help='sparse model weights')
     parser.add_argument('--percent', type=float, default=0.4, help='channel prune percent')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
@@ -239,7 +239,7 @@ if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = Darknet(opt.cfg, (img_size, img_size)).to(device)
 
-    modelyolov5 = torch.load('weights/last.pt', map_location=device)['model'].float()  # load FP32 model
+    modelyolov5 = torch.load(opt.weights, map_location=device)['model'].float()  # load FP32 model
     copy_weight(modelyolov5, model)
 
 
@@ -487,6 +487,12 @@ if __name__ == '__main__':
 
     compact_model_name = opt.weights.replace('/', f'/prune_{percent}_')
     if compact_model_name.endswith('.pt'):
+        chkpt = {'epoch': -1,
+                 'best_fitness': None,
+                 'training_results': None,
+                 'model': compact_model.state_dict(),
+                 'optimizer': None}
+        torch.save(chkpt, compact_model_name)
         compact_model_name = compact_model_name.replace('.pt', '.weights')
     save_weights(compact_model, path=compact_model_name)
     print(f'Compact model has been saved: {compact_model_name}')
