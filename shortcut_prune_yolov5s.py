@@ -229,8 +229,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='cfg/yolov5s.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/last_s_to_prune1_100.pt', help='sparse model weights')
-    parser.add_argument('--percent', type=float, default=0.4, help='channel prune percent')
+    parser.add_argument('--weights', type=str, default='weights/last_s_to_prune1_300_5.pt', help='sparse model weights')
+    parser.add_argument('--percent', type=float, default=0.3, help='channel prune percent')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
     print(opt)
@@ -299,6 +299,7 @@ if __name__ == '__main__':
                     model_copy.module_list[idx][1]).__name__ is 'BatchNorm2d' else model_copy.module_list[idx][0]
 
                 mask = obtain_bn_mask(bn_module, thre1)
+
                 #记录剪枝后，每一层卷积层对应的mask
                 # idx_new[idx]=mask.cpu().numpy()
                 idx_new[idx]=mask
@@ -454,7 +455,7 @@ if __name__ == '__main__':
         start = time.time()
         with torch.no_grad():
             for i in range(repeat):
-                output = model(input)
+                output = model(input)[0]
         avg_infer_time = (time.time() - start) / repeat
 
         return avg_infer_time, output
@@ -463,6 +464,9 @@ if __name__ == '__main__':
     pruned_forward_time, pruned_output = obtain_avg_forward_time(random_input, pruned_model)
     compact_forward_time, compact_output = obtain_avg_forward_time(random_input, compact_model)
 
+    diff = (pruned_output - compact_output).abs().gt(0.001).sum().item()
+    if diff > 0:
+        print('Something wrong with the pruned model!')
 
     # 在测试集上测试剪枝后的模型, 并统计模型的参数数量
     print('testing final model')
@@ -494,6 +498,6 @@ if __name__ == '__main__':
                  'optimizer': None}
         torch.save(chkpt, compact_model_name)
         compact_model_name = compact_model_name.replace('.pt', '.weights')
-    save_weights(compact_model, path=compact_model_name)
+    # save_weights(compact_model, path=compact_model_name)
     print(f'Compact model has been saved: {compact_model_name}')
 

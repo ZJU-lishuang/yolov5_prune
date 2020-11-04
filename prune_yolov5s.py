@@ -455,7 +455,7 @@ if __name__ == '__main__':
                  'optimizer': None}
         torch.save(chkpt, compact_model_name)
         compact_model_name = compact_model_name.replace('.pt', '.weights')
-    save_weights(compact_model, compact_model_name)
+    # save_weights(compact_model, compact_model_name)
     print(f'Compact model has been saved: {compact_model_name}')
 
     # def initialize_weights(model):
