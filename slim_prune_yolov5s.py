@@ -7,6 +7,7 @@ from terminaltables import AsciiTable
 import time
 from utils.prune_utils import *
 import argparse
+import torchvision
 
 def copy_weight(modelyolov5,model):
     focus = list(modelyolov5.model.children())[0]
@@ -224,13 +225,14 @@ def copy_weight(modelyolov5,model):
     model.module_list[103][0] = detect.m[1]
     model.module_list[117][0] = detect.m[2]
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='cfg/yolov5s.cfg', help='cfg file path')
+    # parser.add_argument('--cfg', type=str, default='cfg/yolov5s_tiny.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/last_s_to_prune1_100.pt', help='sparse model weights')
-    parser.add_argument('--global_percent', type=float, default=0.2, help='global channel prune percent')
+    parser.add_argument('--weights', type=str, default='weights/last_s_to_prune1_300_5.pt', help='sparse model weights')
+    # parser.add_argument('--weights', type=str, default='weights/last_tiny_end.pt', help='sparse model weights')
+    parser.add_argument('--global_percent', type=float, default=0.3, help='global channel prune percent')
     parser.add_argument('--layer_keep', type=float, default=0.01, help='channel keep percent per layer')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
@@ -242,6 +244,8 @@ if __name__ == '__main__':
 
     modelyolov5 = torch.load(opt.weights, map_location=device)['model'].float()  # load FP32 model
     copy_weight(modelyolov5, model)
+
+    # model.load_state_dict(torch.load(opt.weights)['model'].state_dict())
 
 
     eval_model = lambda model:test(model=model,cfg=opt.cfg, data=opt.data, batch_size=16, img_size=img_size)
@@ -391,12 +395,13 @@ if __name__ == '__main__':
     random_input = torch.rand((1, 3, img_size, img_size)).to(device)
 
     def obtain_avg_forward_time(input, model, repeat=200):
-
+        # model.to('cpu').fuse()
+        # model.module_list.to(device)
         model.eval()
         start = time.time()
         with torch.no_grad():
             for i in range(repeat):
-                output = model(input)
+                output = model(input)[0]
         avg_infer_time = (time.time() - start) / repeat
 
         return avg_infer_time, output
@@ -405,6 +410,9 @@ if __name__ == '__main__':
     pruned_forward_time, pruned_output = obtain_avg_forward_time(random_input, pruned_model)
     compact_forward_time, compact_output = obtain_avg_forward_time(random_input, compact_model)
 
+    diff = (pruned_output - compact_output).abs().gt(0.001).sum().item()
+    if diff > 0:
+        print('Something wrong with the pruned model!')
 
     print('testing the final model...')
     with torch.no_grad():
@@ -434,6 +442,6 @@ if __name__ == '__main__':
                  'optimizer': None}
         torch.save(chkpt, compact_model_name)
         compact_model_name = compact_model_name.replace('.pt', '.weights')
-    save_weights(compact_model, path=compact_model_name)
+    # save_weights(compact_model, path=compact_model_name)
     print(f'Compact model has been saved: {compact_model_name}')
 
