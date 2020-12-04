@@ -4,21 +4,22 @@
 项目的基本流程是，使用[ultralytics/yolov5](https://github.com/ultralytics/yolov5)训练自己的数据集，在模型性能达到要求但速度未达到要求时，对模型进行剪枝。首先是稀疏化训练，稀疏化训练很重要，如果模型稀疏度不够，剪枝比例过大会导致剪枝后的模型map接近0。剪枝完成后对模型进行微调回复精度。
 
 #### 基础训练
-[yolov5第二版](https://github.com/ZJU-lishuang/yolov5)
-示例代码
+[yolov5第二版](https://github.com/ZJU-lishuang/yolov5) <br>
+示例代码 <br>
 `python train_pytorch1.4_noprune.py --img 640 --batch 4 --epochs 50 --data ./data/coco_fangweisui.yaml --cfg ./models/yolov5l_fangweisui.yaml --weights 'weights/yolov5l.pt' --name l`
 
-[yolov5第三版](https://github.com/ZJU-lishuang/yolov5-v3)
+[yolov5第三版](https://github.com/ZJU-lishuang/yolov5-v3) <br>
 `python train.py --img 416 --batch 32 --epochs 250 --data data/coco_fangweisui.yaml --weights weights/yolov5s.pt --cfg models/yolov5s_fangweisui.yaml`
 
 #### 稀疏训练
 --prune 0 适用于通道剪枝策略一，--prune 1 适用于其他剪枝策略。<br>
 
-[yolov5第二版](https://github.com/ZJU-lishuang/yolov5)
-示例代码
+[yolov5第二版](https://github.com/ZJU-lishuang/yolov5)<br>
+示例代码<br>
 `python train_prune.py --img 416 --batch 128 --epochs 100 --data ./data/coco_fangweisui.yaml --cfg ./cfg/yolov5s_fangweisui.yaml --weights 'weights/last_s.pt' --name s_to_prune1_100 -sr --s 0.001 --prune 1 `
 
-[yolov5第三版](https://github.com/ZJU-lishuang/yolov5-v3)
+[yolov5第三版](https://github.com/ZJU-lishuang/yolov5-v3)<br>
+示例代码<br>
 `python train_prune.py --img 416 --batch 2 --epochs 5 --data data/coco_fangweisui.yaml --cfg models/yolov5s_fangweisui.yaml --weights weights/yolov5s.pt --name s -sr --s 0.001 --prune 1`
 
 #### 通道剪枝策略一
@@ -45,11 +46,11 @@
 TODO
 
 #### 微调finetune
-[yolov5第二版](https://github.com/ZJU-lishuang/yolov5)
-示例代码
+[yolov5第二版](https://github.com/ZJU-lishuang/yolov5)<br>
+示例代码<br>
 `python prune_finetune.py --img 416 --batch 80 --epochs 100 --data ./data/coco_fangweisui.yaml --cfg ./cfg/prune_0.3_keep_0.01_8x_yolov5s.cfg --weights 'weights/prune_0.3_keep_0.01_8x_last_s_to_prune1_300_5.pt' --name prune_s `
 
-[yolov5第三版](https://github.com/ZJU-lishuang/yolov5-v3)
+[yolov5第三版](https://github.com/ZJU-lishuang/yolov5-v3)<br>
 TODO
 
 
