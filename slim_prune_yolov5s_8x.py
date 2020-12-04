@@ -227,10 +227,10 @@ def copy_weight(modelyolov5,model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov5s.cfg', help='cfg file path')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v3.cfg', help='cfg file path')
     # parser.add_argument('--cfg', type=str, default='cfg/yolov5s_tiny.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/last_s_to_prune1_300_5.pt', help='sparse model weights')
+    parser.add_argument('--weights', type=str, default='weights/last.pt', help='sparse model weights')
     # parser.add_argument('--weights', type=str, default='weights/last_tiny_end.pt', help='sparse model weights')
     parser.add_argument('--global_percent', type=float, default=0.3, help='global channel prune percent')
     parser.add_argument('--layer_keep', type=float, default=0.01, help='channel keep percent per layer')
