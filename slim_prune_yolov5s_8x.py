@@ -227,12 +227,10 @@ def copy_weight(modelyolov5,model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v3.cfg', help='cfg file path')
-    # parser.add_argument('--cfg', type=str, default='cfg/yolov5s_tiny.cfg', help='cfg file path')
-    parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/last.pt', help='sparse model weights')
-    # parser.add_argument('--weights', type=str, default='weights/last_tiny_end.pt', help='sparse model weights')
-    parser.add_argument('--global_percent', type=float, default=0.3, help='global channel prune percent')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s.cfg', help='cfg file path')
+    parser.add_argument('--data', type=str, default='data/coco_128img.data', help='*.data file path')
+    parser.add_argument('--weights', type=str, default='weights/yolov5s.pt', help='sparse model weights')
+    parser.add_argument('--global_percent', type=float, default=0.9, help='global channel prune percent')
     parser.add_argument('--layer_keep', type=float, default=0.01, help='channel keep percent per layer')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
@@ -248,7 +246,7 @@ if __name__ == '__main__':
     # model.load_state_dict(torch.load(opt.weights)['model'].state_dict())
 
 
-    eval_model = lambda model:test(model=model,cfg=opt.cfg, data=opt.data, batch_size=16, img_size=img_size)
+    eval_model = lambda model:test(model=model,cfg=opt.cfg, data=opt.data, batch_size=2, img_size=img_size)
     obtain_num_parameters = lambda model:sum([param.nelement() for param in model.parameters()])
 
     print("\nlet's test the original model first:")
@@ -280,47 +278,94 @@ if __name__ == '__main__':
         for idx in CBL_idx:
             # bn_module = model.module_list[idx][1]
             bn_module = model.module_list[idx][1] if type(
-                model.module_list[idx][1]).__name__ is 'BatchNorm2d' else model.module_list[idx][0]
+                model.module_list[idx][1]).__name__ == 'BatchNorm2d' else model.module_list[idx][0]
             if idx in prune_idx:
 
                 weight_copy = bn_module.weight.data.abs().clone()
+
+                if model.module_defs[idx][ 'type'] == 'convolutional_noconv':
+                    channels = weight_copy.shape[0]
+                    channels_half=int(channels/2)
+                    weight_copy1=weight_copy[:channels_half]
+                    weight_copy2 = weight_copy[channels_half:]
+                    min_channel_num = int(channels_half * opt.layer_keep) if int(channels_half * opt.layer_keep) > 0 else 1
+                    mask1 = weight_copy1.gt(thresh).float()
+                    mask2 = weight_copy2.gt(thresh).float()
+
+                    if int(torch.sum(mask1)) < min_channel_num:
+                        _, sorted_index_weights1 = torch.sort(weight_copy1, descending=True)
+                        mask1[sorted_index_weights1[:min_channel_num]] = 1.
+
+                    if int(torch.sum(mask2)) < min_channel_num:
+                        _, sorted_index_weights2 = torch.sort(weight_copy2, descending=True)
+                        mask2[sorted_index_weights2[:min_channel_num]] = 1.
+
+                    # regular
+                    mask_cnt1 = int(mask1.sum())
+                    mask_cnt2 = int(mask2.sum())
+
+                    if mask_cnt1 % 8 != 0:
+                        mask_cnt1 = int((mask_cnt1 // 8 + 1) * 8)
+                    if mask_cnt2 % 8 != 0:
+                        mask_cnt2 = int((mask_cnt2 // 8 + 1) * 8)
+
+                    this_layer_sort_bn = bn_module.weight.data.abs().clone()
+                    this_layer_sort_bn1 = this_layer_sort_bn[:channels_half]
+                    this_layer_sort_bn2 = this_layer_sort_bn[channels_half:]
+                    _, sorted_index_weights1 = torch.sort(this_layer_sort_bn1, descending=True)
+                    _, sorted_index_weights2 = torch.sort(this_layer_sort_bn2, descending=True)
+                    mask1[sorted_index_weights1[:mask_cnt1]] = 1.
+                    mask2[sorted_index_weights2[:mask_cnt2]] = 1.
+
+
+                    remain1 = int(mask1.sum())
+                    pruned = pruned + mask1.shape[0] - remain1
+                    remain2 = int(mask2.sum())
+                    pruned = pruned + mask2.shape[0] - remain2
+
+                    mask=torch.cat((mask1,mask2))
+                    remain=remain1+remain2
+
+                    print(f'layer index: {idx:>3d} \t total channel: {mask.shape[0]:>4d} \t '
+                          f'remaining channel: {remain:>4d}')
+                else:
                 
-                channels = weight_copy.shape[0] #
-                min_channel_num = int(channels * opt.layer_keep) if int(channels * opt.layer_keep) > 0 else 1
-                mask = weight_copy.gt(thresh).float()
-                
-                if int(torch.sum(mask)) < min_channel_num:
-                    _, sorted_index_weights = torch.sort(weight_copy,descending=True)
-                    mask[sorted_index_weights[:min_channel_num]]=1.
+                    channels = weight_copy.shape[0] #
+                    min_channel_num = int(channels * opt.layer_keep) if int(channels * opt.layer_keep) > 0 else 1
+                    mask = weight_copy.gt(thresh).float()
 
-                # regular
-                mask_cnt = int(mask.sum())
+                    if int(torch.sum(mask)) < min_channel_num:
+                        _, sorted_index_weights = torch.sort(weight_copy,descending=True)
+                        mask[sorted_index_weights[:min_channel_num]]=1.
 
-                if mask_cnt % 8 !=0:
-                    mask_cnt=int((mask_cnt//8+1)*8)
+                    # regular
+                    mask_cnt = int(mask.sum())
 
-                # for i in range(len(filter_switch)):
-                #     if mask_cnt <= filter_switch[i]:
-                #         mask_cnt = filter_switch[i]
-                #         break
+                    if mask_cnt % 8 !=0:
+                        mask_cnt=int((mask_cnt//8+1)*8)
 
-                this_layer_sort_bn = bn_module.weight.data.abs().clone()
-                _, sorted_index_weights = torch.sort(this_layer_sort_bn,descending=True)
-                mask[sorted_index_weights[:mask_cnt]]=1.
+                    # for i in range(len(filter_switch)):
+                    #     if mask_cnt <= filter_switch[i]:
+                    #         mask_cnt = filter_switch[i]
+                    #         break
 
-                # sort_bn_values = torch.sort(this_layer_sort_bn)[0]
-                # bn_cnt = bn_module.weight.shape[0]
-                # print("bn_cnt=",bn_cnt)
-                # print("mask_cnt=", mask_cnt)
-                # this_layer_thre = sort_bn_values[bn_cnt - mask_cnt]
-                # mask = obtain_bn_mask(bn_module, this_layer_thre)
-                # print("mask_num=", int(mask.sum()))
+                    this_layer_sort_bn = bn_module.weight.data.abs().clone()
+                    _, sorted_index_weights = torch.sort(this_layer_sort_bn,descending=True)
+                    mask[sorted_index_weights[:mask_cnt]]=1.
 
-                remain = int(mask.sum())
-                pruned = pruned + mask.shape[0] - remain
+                    # sort_bn_values = torch.sort(this_layer_sort_bn)[0]
+                    # bn_cnt = bn_module.weight.shape[0]
+                    # print("bn_cnt=",bn_cnt)
+                    # print("mask_cnt=", mask_cnt)
+                    # this_layer_thre = sort_bn_values[bn_cnt - mask_cnt]
+                    # mask = obtain_bn_mask(bn_module, this_layer_thre)
+                    # print("mask_num=", int(mask.sum()))
 
-                print(f'layer index: {idx:>3d} \t total channel: {mask.shape[0]:>4d} \t '
-                        f'remaining channel: {remain:>4d}')
+                    remain = int(mask.sum())
+                    pruned = pruned + mask.shape[0] - remain
+
+                    print(f'layer index: {idx:>3d} \t total channel: {mask.shape[0]:>4d} \t '
+                            f'remaining channel: {remain:>4d}')
             else:
                 mask = torch.ones(bn_module.weight.data.shape)
                 remain = mask.shape[0]
@@ -353,7 +398,7 @@ if __name__ == '__main__':
         for idx in CBL_idx:
             # bn_module = model_copy.module_list[idx][1]
             bn_module = model_copy.module_list[idx][1] if type(
-                model_copy.module_list[idx][1]).__name__ is 'BatchNorm2d' else model_copy.module_list[idx][0]
+                model_copy.module_list[idx][1]).__name__ == 'BatchNorm2d' else model_copy.module_list[idx][0]
             mask = CBLidx2mask[idx].cuda()
             bn_module.weight.data.mul_(mask)
 
