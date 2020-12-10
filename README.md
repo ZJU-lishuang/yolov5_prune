@@ -3,6 +3,14 @@
 
 项目的基本流程是，使用[ultralytics/yolov5](https://github.com/ultralytics/yolov5)训练自己的数据集，在模型性能达到要求但速度未达到要求时，对模型进行剪枝。首先是稀疏化训练，稀疏化训练很重要，如果模型稀疏度不够，剪枝比例过大会导致剪枝后的模型map接近0。剪枝完成后对模型进行微调回复精度。
 
+
+实例流程
+[dataset](http://www.robots.ox.ac.uk/~vgg/data/hands/downloads/hand_dataset.tar.gz)<br>
+STEP1:基础训练<br>
+STEP2:稀疏训练<br>
+STEP3:八倍通道剪枝<br>
+STEP4:微调finetune<br>
+
 #### STEP1:基础训练
 [yolov5第二版](https://github.com/ZJU-lishuang/yolov5) <br>
 示例代码 <br>
