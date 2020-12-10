@@ -396,7 +396,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v3.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/last.pt', help='sparse model weights')
+    parser.add_argument('--weights', type=str, default='weights/yolov5s.pt', help='sparse model weights')
     parser.add_argument('--percent', type=float, default=0.6, help='channel prune percent')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
@@ -419,6 +419,8 @@ if __name__ == '__main__':
     modelyolov5=torch.load(opt.weights, map_location=device)['model'].float().eval()
     modelyolov5.model[24].export = False  # onnx export
 
+    model=modelyolov5
+
     #load prune model
     # model_prune = Darknet(opt.cfg, (img_size, img_size))
     # initialize_weights(model_prune)
@@ -430,11 +432,11 @@ if __name__ == '__main__':
     # model_prune=torch.load('last_prune.pt')['model'].float().eval()
 
     #load yolov5s from cfg
-    model = Darknet(opt.cfg, (img_size, img_size)).to(device)
-    copy_weight(modelyolov5,model)
+    # model = Darknet(opt.cfg, (img_size, img_size)).to(device)
+    # copy_weight(modelyolov5,model)
 
     # path='/home/lishuang/Disk/gitlab/traincode/yolov3-channel-and-layer-pruning-master/2_31746253093C100D_2018-12-10-21-56-37-998_0_75_636_307_6.jpg'
-    path='/home/lishuang/Disk/remote/pycharm/yolov5_prune/data/val/images/1_31746E6D4E3BF411_2020-01-07-18-08-59-383_0_65_640_370_6.jpg'
+    path='data/samples/bus.jpg'
     img0 = cv2.imread(path)  # BGR
     # Padded resize
     img = letterboxv5(img0, new_shape=416)[0]

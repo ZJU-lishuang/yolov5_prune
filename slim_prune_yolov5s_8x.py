@@ -227,12 +227,12 @@ def copy_weight(modelyolov5,model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov5s.cfg', help='cfg file path')
-    parser.add_argument('--data', type=str, default='data/coco_128img.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/yolov5s.pt', help='sparse model weights')
-    parser.add_argument('--global_percent', type=float, default=0.9, help='global channel prune percent')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_hand.cfg', help='cfg file path')
+    parser.add_argument('--data', type=str, default='data/oxfordhand.data', help='*.data file path')
+    parser.add_argument('--weights', type=str, default='weights/last_s_to_prune.pt', help='sparse model weights')
+    parser.add_argument('--global_percent', type=float, default=0.8, help='global channel prune percent')
     parser.add_argument('--layer_keep', type=float, default=0.01, help='channel keep percent per layer')
-    parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
+    parser.add_argument('--img_size', type=int, default=640, help='inference size (pixels)')
     opt = parser.parse_args()
     print(opt)
 

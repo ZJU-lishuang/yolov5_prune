@@ -20,6 +20,11 @@
 *.data
 *.json
 
+#data
+data/coco128
+data/hand_dataset
+
+
 # *.cfg
 !cfg/yolov3*.cfg
 
