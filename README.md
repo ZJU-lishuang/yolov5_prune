@@ -4,12 +4,24 @@
 项目的基本流程是，使用[ultralytics/yolov5](https://github.com/ultralytics/yolov5)训练自己的数据集，在模型性能达到要求但速度未达到要求时，对模型进行剪枝。首先是稀疏化训练，稀疏化训练很重要，如果模型稀疏度不够，剪枝比例过大会导致剪枝后的模型map接近0。剪枝完成后对模型进行微调回复精度。
 
 
-实例流程
-[dataset](http://www.robots.ox.ac.uk/~vgg/data/hands/downloads/hand_dataset.tar.gz)<br>
-STEP1:基础训练<br>
-STEP2:稀疏训练<br>
-STEP3:八倍通道剪枝<br>
-STEP4:微调finetune<br>
+## 实例流程
+数据集下载[dataset](http://www.robots.ox.ac.uk/~vgg/data/hands/downloads/hand_dataset.tar.gz)<br>
+### STEP1:基础训练 
+附件：[训练记录](https://drive.google.com/drive/folders/1xHq4m-X5vrrCtIajyMFTO8ClZlxJOjD_?usp=sharing)<br>
+注：该模型使用torch1.4训练，后面三步环境torch>1.5，加载该模型时需添加
+```
+if weights.endswith('.pt'):  # pytorch format
+        ckpt = torch.load(weights, map_location=device)  # load checkpoint
+        #低版本模型在高版本中加载
+        for k, m in ckpt['model'].named_modules():
+            m._non_persistent_buffers_set = set()  # pytorch 1.6.0 compatability
+```
+### STEP2:稀疏训练     
+附件：[稀疏训练记录](https://drive.google.com/drive/folders/1XTkS_aTzc9MEGZVtLxMISE2WLIKRv4hT?usp=sharing)<br>
+### STEP3:八倍通道剪枝  
+附件：[剪枝后模型](https://drive.google.com/drive/folders/1_SPlU2nmy5-TDfL0JsfZqwZxK6pI_Sco?usp=sharing)<br>
+### STEP4:微调finetune 
+附件：[微调训练记录](https://drive.google.com/drive/folders/1tDPUGEzCPil5mL1MNS_2IY8knqBvaAGu?usp=sharing)<br>
 
 #### STEP1:基础训练
 [yolov5第二版](https://github.com/ZJU-lishuang/yolov5) <br>
@@ -48,7 +60,9 @@ TODO
 #### STEP4:微调finetune
 [yolov5第二版](https://github.com/ZJU-lishuang/yolov5)<br>
 示例代码<br>
-`python prune_finetune.py --img 640 --batch 8 --epochs 10 --data ./data/hand.yaml --cfg ./cfg/prune_0.8_keep_0.01_8x_yolov5s_hand.cfg --weights ./weights/prune_0.8_keep_0.01_8x_last_s_to_prune.pt --name prune_hand_s`
+```
+python prune_finetune.py --img 640 --batch 8 --epochs 10 --data ./data/hand.yaml --cfg ./cfg/prune_0.8_keep_0.01_8x_yolov5s_hand.cfg --weights ./weights/prune_0.8_keep_0.01_8x_last_s_to_prune.pt --name prune_hand_s
+```
 
 
 
