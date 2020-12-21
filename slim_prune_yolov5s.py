@@ -286,19 +286,64 @@ if __name__ == '__main__':
             if idx in prune_idx:
 
                 weight_copy = bn_module.weight.data.abs().clone()
-                
-                channels = weight_copy.shape[0] #
-                min_channel_num = int(channels * opt.layer_keep) if int(channels * opt.layer_keep) > 0 else 1
-                mask = weight_copy.gt(thresh).float()
-                
-                if int(torch.sum(mask)) < min_channel_num: 
-                    _, sorted_index_weights = torch.sort(weight_copy,descending=True)
-                    mask[sorted_index_weights[:min_channel_num]]=1. 
-                remain = int(mask.sum())
-                pruned = pruned + mask.shape[0] - remain
 
-                print(f'layer index: {idx:>3d} \t total channel: {mask.shape[0]:>4d} \t '
-                        f'remaining channel: {remain:>4d}')
+                if model.module_defs[idx]['type'] == 'convolutional_noconv':
+                    channels = weight_copy.shape[0]
+                    channels_half = int(channels / 2)
+                    weight_copy1 = weight_copy[:channels_half]
+                    weight_copy2 = weight_copy[channels_half:]
+                    min_channel_num = int(channels_half * opt.layer_keep) if int(
+                        channels_half * opt.layer_keep) > 0 else 1
+                    mask1 = weight_copy1.gt(thresh).float()
+                    mask2 = weight_copy2.gt(thresh).float()
+
+                    if int(torch.sum(mask1)) < min_channel_num:
+                        _, sorted_index_weights1 = torch.sort(weight_copy1, descending=True)
+                        mask1[sorted_index_weights1[:min_channel_num]] = 1.
+
+                    if int(torch.sum(mask2)) < min_channel_num:
+                        _, sorted_index_weights2 = torch.sort(weight_copy2, descending=True)
+                        mask2[sorted_index_weights2[:min_channel_num]] = 1.
+
+                    remain1 = int(mask1.sum())
+                    pruned = pruned + mask1.shape[0] - remain1
+                    remain2 = int(mask2.sum())
+                    pruned = pruned + mask2.shape[0] - remain2
+
+                    mask = torch.cat((mask1, mask2))
+                    remain = remain1 + remain2
+
+                    print(f'layer index: {idx:>3d} \t total channel: {mask.shape[0]:>4d} \t '
+                          f'remaining channel: {remain:>4d}')
+                else:
+
+                    channels = weight_copy.shape[0]  #
+                    min_channel_num = int(channels * opt.layer_keep) if int(channels * opt.layer_keep) > 0 else 1
+                    mask = weight_copy.gt(thresh).float()
+
+                    if int(torch.sum(mask)) < min_channel_num:
+                        _, sorted_index_weights = torch.sort(weight_copy, descending=True)
+                        mask[sorted_index_weights[:min_channel_num]] = 1.
+
+                    remain = int(mask.sum())
+                    pruned = pruned + mask.shape[0] - remain
+
+                    print(f'layer index: {idx:>3d} \t total channel: {mask.shape[0]:>4d} \t '
+                          f'remaining channel: {remain:>4d}')
+                ###########
+                
+                # channels = weight_copy.shape[0] #
+                # min_channel_num = int(channels * opt.layer_keep) if int(channels * opt.layer_keep) > 0 else 1
+                # mask = weight_copy.gt(thresh).float()
+                #
+                # if int(torch.sum(mask)) < min_channel_num:
+                #     _, sorted_index_weights = torch.sort(weight_copy,descending=True)
+                #     mask[sorted_index_weights[:min_channel_num]]=1.
+                # remain = int(mask.sum())
+                # pruned = pruned + mask.shape[0] - remain
+                #
+                # print(f'layer index: {idx:>3d} \t total channel: {mask.shape[0]:>4d} \t '
+                #         f'remaining channel: {remain:>4d}')
             else:
                 mask = torch.ones(bn_module.weight.data.shape)
                 remain = mask.shape[0]
