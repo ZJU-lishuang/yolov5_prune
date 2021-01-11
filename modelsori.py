@@ -40,6 +40,8 @@ def create_modules(module_defs, img_size, arc):
                 modules.add_module('activation', Mish())
             elif mdef['activation'] == 'Hardswish':
                 modules.add_module('activation', nn.Hardswish())
+            elif mdef['activation']=='SiLU':
+                modules.add_module('activation', nn.SiLU())
         elif mdef['type'] == 'convolutional_nobias':
             filters = int(mdef['filters'])
             kernel_size = int(mdef['size'])

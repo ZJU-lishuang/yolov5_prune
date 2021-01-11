@@ -80,6 +80,7 @@ TODO
 python prune_finetune.py --img 640 --batch 8 --epochs 10 --data ./data/hand.yaml --cfg ./cfg/prune_0.8_keep_0.01_8x_yolov5s_hand.cfg --weights ./weights/prune_0.8_keep_0.01_8x_last_s_to_prune.pt --name prune_hand_s
 ```
 
-
+#### TODO
+* layer_prune_yolov5s.py,prune_yolov5s.py,shortcut_prune_yolov5s.py中，对convolutional_noconv剪枝导致通道数为0的bug fix。
 
 

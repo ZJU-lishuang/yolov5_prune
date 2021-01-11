@@ -186,7 +186,7 @@ def get_input_mask(module_defs, idx, CBLidx2mask):
         return np.ones(12)
     if module_defs[idx - 1]['type'] == 'convolutional':
         return CBLidx2mask[idx - 1]
-    if module_defs[idx - 1]['type'] == 'convolutional_noconv':
+    if module_defs[idx - 1]['type'] == 'convolutional_noconv':  #yolov5-v3
         return CBLidx2mask[idx - 1]
     elif module_defs[idx - 1]['type'] == 'shortcut':
         return CBLidx2mask[idx - 2]
@@ -228,7 +228,9 @@ def get_input_mask(module_defs, idx, CBLidx2mask):
                 mask1 = CBLidx2mask[route_in_idxs[0] - 1]
             elif module_defs[route_in_idxs[0]]['type'] == 'convolutional':
                 mask1 = CBLidx2mask[route_in_idxs[0]]
-            elif module_defs[route_in_idxs[0]]['type'] == 'convolutional_nobias':
+            elif module_defs[route_in_idxs[0]]['type'] == 'shortcut':  #yolov5-v4
+                mask1 = CBLidx2mask[route_in_idxs[0] - 1]
+            elif module_defs[route_in_idxs[0]]['type'] == 'convolutional_nobias':  #yolov5-v3
                 if module_defs[route_in_idxs[0]-1]['type'] == 'convolutional':
                     mask1 = CBLidx2mask[route_in_idxs[0] - 1]
                 else:
@@ -255,7 +257,7 @@ def get_input_mask(module_defs, idx, CBLidx2mask):
                 mask2=np.concatenate([mask1tmp, mask2tmp])
             else:
                 mask2 = CBLidx2mask[route_in_idxs[1] - 1]
-            if module_defs[route_in_idxs[0]]['type'] == 'convolutional_nobias':
+            if module_defs[route_in_idxs[0]]['type'] == 'convolutional_nobias': #yolov5-v3
                 return [mask1,mask2]
             return np.concatenate([mask1, mask2])
 
@@ -477,6 +479,10 @@ def prune_model_keep_size2(model, prune_idx, CBL_idx, CBLidx2mask):
                     activation = F.leaky_relu((1 - mask) * bn_module.bias.data, 0.1)
                 elif model_def['activation'] == 'mish':
                     activation = (1 - mask) * bn_module.bias.data.mul(F.softplus(bn_module.bias.data).tanh())
+                elif model_def['activation'] == 'SiLU':  #yolov5-v4
+                    activation=(1 - mask) * bn_module.bias.data * F.sigmoid(bn_module.bias.data)
+                elif model_def['activation'] == 'Hardswish':
+                    activation=(1 - mask) *bn_module.bias.data * F.hardtanh(bn_module.bias.data + 3, 0., 6.) / 6.
                 update_activation(i, pruned_model, activation, CBL_idx)
                 bn_module.bias.data.mul_(mask)
             activations.append(activation)
@@ -640,7 +646,9 @@ def merge_mask(model, CBLidx2mask, CBLidx2filters):
 
             layer_i = i
             mtype = 'shortcut'
+
             while mtype == 'shortcut':
+
 
                 if model.module_defs[layer_i-1]['type'] == 'convolutional': 
                     bn = int(model.module_defs[layer_i-1]['batch_normalize'])
@@ -653,6 +661,68 @@ def merge_mask(model, CBLidx2mask, CBLidx2filters):
 
                 if mtype == 'convolutional': 
                     bn = int(model.module_defs[layer_i]['batch_normalize'])
-                    if bn:     
+                    if bn:
+                        CBLidx2mask[layer_i] = merge_mask
+                        CBLidx2filters[layer_i] = int(torch.sum(merge_mask).item())
+
+
+def merge_mask_regular(model, CBLidx2mask, CBLidx2filters):
+    for i in range(len(model.module_defs) - 1, -1, -1):
+        mtype = model.module_defs[i]['type']
+        if mtype == 'shortcut':
+            if model.module_defs[i]['is_access']:
+                continue
+
+            Merge_masks = []
+            layer_i = i
+            while mtype == 'shortcut':
+                model.module_defs[layer_i]['is_access'] = True
+
+                if model.module_defs[layer_i - 1]['type'] == 'convolutional':
+                    bn = int(model.module_defs[layer_i - 1]['batch_normalize'])
+                    if bn:
+                        Merge_masks.append(CBLidx2mask[layer_i - 1].unsqueeze(0))
+
+                layer_i = int(model.module_defs[layer_i]['from']) + layer_i
+                mtype = model.module_defs[layer_i]['type']
+
+                if mtype == 'convolutional':
+                    bn = int(model.module_defs[layer_i]['batch_normalize'])
+                    if bn:
+                        Merge_masks.append(CBLidx2mask[layer_i].unsqueeze(0))
+
+            if len(Merge_masks) > 1:
+                Merge_masks = torch.cat(Merge_masks, 0)
+                merge_mask = (torch.sum(Merge_masks, dim=0) > 0).float()
+            else:
+                merge_mask = Merge_masks[0].float()
+
+            layer_i = i
+            mtype = 'shortcut'
+
+            # regular
+            mask_cnt = int(torch.sum(merge_mask).item())
+            if mask_cnt % 8 != 0:
+                mask_cnt = int((mask_cnt // 8 + 1) * 8)
+
+            bn_module = model.module_list[layer_i - 1][1]
+            this_layer_sort_bn = bn_module.weight.data.abs().clone()
+            _, sorted_index_weights = torch.sort(this_layer_sort_bn, descending=True)
+            merge_mask[sorted_index_weights[:mask_cnt]] = 1.
+
+            while mtype == 'shortcut':
+
+                if model.module_defs[layer_i - 1]['type'] == 'convolutional':
+                    bn = int(model.module_defs[layer_i - 1]['batch_normalize'])
+                    if bn:
+                        CBLidx2mask[layer_i - 1] = merge_mask
+                        CBLidx2filters[layer_i - 1] = int(torch.sum(merge_mask).item())
+
+                layer_i = int(model.module_defs[layer_i]['from']) + layer_i
+                mtype = model.module_defs[layer_i]['type']
+
+                if mtype == 'convolutional':
+                    bn = int(model.module_defs[layer_i]['batch_normalize'])
+                    if bn:
                         CBLidx2mask[layer_i] = merge_mask
                         CBLidx2filters[layer_i] = int(torch.sum(merge_mask).item())
