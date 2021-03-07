@@ -10,6 +10,102 @@ import argparse
 
 from models.yolo import Model
 
+
+def copy_conv(conv_src,conv_dst):
+    conv_dst[0] = conv_src.conv
+    conv_dst[1] = conv_src.bn
+    conv_dst[2] = conv_src.act
+
+def copy_weight_v4(modelyolov5,model):
+    focus = list(modelyolov5.model.children())[0]
+    copy_conv(focus.conv, model.module_list[1])
+    conv1 = list(modelyolov5.model.children())[1]
+    copy_conv(conv1, model.module_list[2])
+    cspnet1 = list(modelyolov5.model.children())[2]
+    copy_conv(cspnet1.cv2, model.module_list[3])
+    copy_conv(cspnet1.cv1, model.module_list[5])
+    copy_conv(cspnet1.m[0].cv1, model.module_list[6])
+    copy_conv(cspnet1.m[0].cv2, model.module_list[7])
+    copy_conv(cspnet1.cv3, model.module_list[10])
+    conv2 = list(modelyolov5.model.children())[3]
+    copy_conv(conv2, model.module_list[11])
+    cspnet2 = list(modelyolov5.model.children())[4]
+    copy_conv(cspnet2.cv2, model.module_list[12])
+    copy_conv(cspnet2.cv1, model.module_list[14])
+    copy_conv(cspnet2.m[0].cv1, model.module_list[15])
+    copy_conv(cspnet2.m[0].cv2, model.module_list[16])
+    copy_conv(cspnet2.m[1].cv1, model.module_list[18])
+    copy_conv(cspnet2.m[1].cv2, model.module_list[19])
+    copy_conv(cspnet2.m[2].cv1, model.module_list[21])
+    copy_conv(cspnet2.m[2].cv2, model.module_list[22])
+    copy_conv(cspnet2.cv3, model.module_list[25])
+    conv3 = list(modelyolov5.model.children())[5]
+    copy_conv(conv3, model.module_list[26])
+    cspnet3 = list(modelyolov5.model.children())[6]
+    copy_conv(cspnet3.cv2, model.module_list[27])
+    copy_conv(cspnet3.cv1, model.module_list[29])
+    copy_conv(cspnet3.m[0].cv1, model.module_list[30])
+    copy_conv(cspnet3.m[0].cv2, model.module_list[31])
+    copy_conv(cspnet3.m[1].cv1, model.module_list[33])
+    copy_conv(cspnet3.m[1].cv2, model.module_list[34])
+    copy_conv(cspnet3.m[2].cv1, model.module_list[36])
+    copy_conv(cspnet3.m[2].cv2, model.module_list[37])
+    copy_conv(cspnet3.cv3, model.module_list[40])
+    conv4 = list(modelyolov5.model.children())[7]
+    copy_conv(conv4, model.module_list[41])
+    spp = list(modelyolov5.model.children())[8]
+    copy_conv(spp.cv1, model.module_list[42])
+    model.module_list[43] = spp.m[0]
+    model.module_list[45] = spp.m[1]
+    model.module_list[47] = spp.m[2]
+    copy_conv(spp.cv2, model.module_list[49])
+    cspnet4 = list(modelyolov5.model.children())[9]
+    copy_conv(cspnet4.cv2, model.module_list[50])
+    copy_conv(cspnet4.cv1, model.module_list[52])
+    copy_conv(cspnet4.m[0].cv1, model.module_list[53])
+    copy_conv(cspnet4.m[0].cv2, model.module_list[54])
+    copy_conv(cspnet4.cv3, model.module_list[56])
+    conv5 = list(modelyolov5.model.children())[10]
+    copy_conv(conv5, model.module_list[57])
+    upsample1 = list(modelyolov5.model.children())[11]
+    model.module_list[58] = upsample1
+    cspnet5 = list(modelyolov5.model.children())[13]
+    copy_conv(cspnet5.cv2, model.module_list[60])
+    copy_conv(cspnet5.cv1, model.module_list[62])
+    copy_conv(cspnet5.m[0].cv1, model.module_list[63])
+    copy_conv(cspnet5.m[0].cv2, model.module_list[64])
+    copy_conv(cspnet5.cv3, model.module_list[66])
+    conv6 = list(modelyolov5.model.children())[14]
+    copy_conv(conv6, model.module_list[67])
+    upsample2 = list(modelyolov5.model.children())[15]
+    model.module_list[68] = upsample2
+    cspnet6 = list(modelyolov5.model.children())[17]
+    copy_conv(cspnet6.cv2, model.module_list[70])
+    copy_conv(cspnet6.cv1, model.module_list[72])
+    copy_conv(cspnet6.m[0].cv1, model.module_list[73])
+    copy_conv(cspnet6.m[0].cv2, model.module_list[74])
+    copy_conv(cspnet6.cv3, model.module_list[76])
+    conv7 = list(modelyolov5.model.children())[18]
+    copy_conv(conv7, model.module_list[80])
+    cspnet7 = list(modelyolov5.model.children())[20]
+    copy_conv(cspnet7.cv2, model.module_list[82])
+    copy_conv(cspnet7.cv1, model.module_list[84])
+    copy_conv(cspnet7.m[0].cv1, model.module_list[85])
+    copy_conv(cspnet7.m[0].cv2, model.module_list[86])
+    copy_conv(cspnet7.cv3, model.module_list[88])
+    conv8 = list(modelyolov5.model.children())[21]
+    copy_conv(conv8, model.module_list[92])
+    cspnet8 = list(modelyolov5.model.children())[23]
+    copy_conv(cspnet8.cv2, model.module_list[94])
+    copy_conv(cspnet8.cv1, model.module_list[96])
+    copy_conv(cspnet8.m[0].cv1, model.module_list[97])
+    copy_conv(cspnet8.m[0].cv2, model.module_list[98])
+    copy_conv(cspnet8.cv3, model.module_list[100])
+    detect = list(modelyolov5.model.children())[24]
+    model.module_list[77][0] = detect.m[0]
+    model.module_list[89][0] = detect.m[1]
+    model.module_list[101][0] = detect.m[2]
+
 def copy_weight(modelyolov5,model):
     focus = list(modelyolov5.model.children())[0]
     model.module_list[1][0] = focus.conv.conv
@@ -229,49 +325,25 @@ def copy_weight(modelyolov5,model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov5s.cfg', help='cfg file path')
-    parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/yolov5s.pt', help='sparse model weights')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v4.cfg', help='cfg file path')
+    parser.add_argument('--data', type=str, default='data/coco_128img.data', help='*.data file path')
+    parser.add_argument('--weights', type=str, default='weights/yolov5s_v4.pt', help='sparse model weights')
     parser.add_argument('--percent', type=float, default=0.8, help='channel prune percent')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
     print(opt)
 
-
     img_size = opt.img_size
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # model = Darknet(opt.cfg, (img_size, img_size)).to(device)
-
-    # if opt.weights.endswith('.pt'):
-    #     model.load_state_dict(torch.load(opt.weights)['model'])
-    # else:
-    #     load_darknet_weights(model, opt.weights)
-    # print('\nloaded weights from ',opt.weights)
-    # device="cpu"
-    model = Darknet('cfg/yolov5s.cfg', (img_size, img_size)).to(device)
-
-    # ckpt = torch.load('best_s.pt', map_location=device)  # load checkpoint
-    modelyolov5 = Model('cfg/yolov5s.yaml', nc=2).to(device)
-    # exclude = ['anchor']  # exclude keys
-    # ckpt['model'] = {k: v for k, v in ckpt['model'].float().state_dict().items()
-    #                  if k in modelyolov5.state_dict() and not any(x in k for x in exclude)
-    #                  and modelyolov5.state_dict()[k].shape == v.shape}
-    # modelyolov5.load_state_dict(ckpt['model'], strict=False)
-
-    modelyolov5=torch.load('weights/last.pt', map_location=device)['model'].float()  # load FP32 model
-
-    copy_weight(modelyolov5, model)
-
-
-
-
-
-    # img = torch.zeros((1, 3, 320, 416))
-    # img /= 255.0
-    # model.eval()
-    # inf_out, train_out = model(img)
-    # modelyolov5.eval()
-    # inf_out1, train_out1 =modelyolov5(img)
+    model = Darknet(opt.cfg, (img_size, img_size)).to(device)
+    modelyolov5 = torch.load(opt.weights, map_location=device)['model'].float()  # load FP32 model
+    YOLOV5_V4 = True
+    if YOLOV5_V4:
+        # yolov5-v4
+        copy_weight_v4(modelyolov5, model)
+    else:
+        # yolov5-v3 yolov5-v2
+        copy_weight(modelyolov5, model)
 
     eval_model = lambda model:test(opt.cfg, opt.data, 
         weights=opt.weights, 
@@ -304,7 +376,7 @@ if __name__ == '__main__':
     highest_thre = min(highest_thre)
 
     # 找到highest_thre对应的下标对应的百分比
-    percent_limit = (sorted_bn==highest_thre).nonzero().item()/len(bn_weights)
+    percent_limit = (sorted_bn==highest_thre).nonzero()[0].item()/len(bn_weights)
 
     print(f'Suggested Gamma threshold should be less than {highest_thre:.4f}.')
     print(f'The corresponding prune ratio is {percent_limit:.3f}, but you can set higher.')
