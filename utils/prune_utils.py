@@ -480,9 +480,9 @@ def prune_model_keep_size2(model, prune_idx, CBL_idx, CBLidx2mask):
                 elif model_def['activation'] == 'mish':
                     activation = (1 - mask) * bn_module.bias.data.mul(F.softplus(bn_module.bias.data).tanh())
                 elif model_def['activation'] == 'SiLU':  #yolov5-v4
-                    activation=(1 - mask) * bn_module.bias.data * F.sigmoid(bn_module.bias.data)
+                    activation=(1 - mask) * bn_module.bias.data.mul(F.sigmoid(bn_module.bias.data))
                 elif model_def['activation'] == 'Hardswish':
-                    activation=(1 - mask) *bn_module.bias.data * F.hardtanh(bn_module.bias.data + 3, 0., 6.) / 6.
+                    activation=(1 - mask) *bn_module.bias.data.mul(F.hardtanh(bn_module.bias.data + 3, 0., 6.) / 6.)
                 update_activation(i, pruned_model, activation, CBL_idx)
                 bn_module.bias.data.mul_(mask)
             activations.append(activation)

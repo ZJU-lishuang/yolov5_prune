@@ -322,9 +322,9 @@ def copy_weight(modelyolov5,model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_hand.cfg', help='cfg file path')
-    parser.add_argument('--data', type=str, default='data/oxfordhand.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/last_s_to_prune.pt', help='sparse model weights')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v4.cfg', help='cfg file path')
+    parser.add_argument('--data', type=str, default='data/coco_128img.data', help='*.data file path')
+    parser.add_argument('--weights', type=str, default='weights/yolov5s_v4.pt', help='sparse model weights')
     parser.add_argument('--global_percent', type=float, default=0.8, help='global channel prune percent')
     parser.add_argument('--layer_keep', type=float, default=0.01, help='channel keep percent per layer')
     parser.add_argument('--img_size', type=int, default=640, help='inference size (pixels)')
@@ -343,9 +343,6 @@ if __name__ == '__main__':
     else:
         #yolov5-v3 yolov5-v2
         copy_weight(modelyolov5, model)
-
-    # model.load_state_dict(torch.load(opt.weights)['model'].state_dict())
-
 
     eval_model = lambda model:test(model=model,cfg=opt.cfg, data=opt.data, batch_size=2, img_size=img_size)
     obtain_num_parameters = lambda model:sum([param.nelement() for param in model.parameters()])
@@ -368,7 +365,6 @@ if __name__ == '__main__':
 
     print(f'Global Threshold should be less than {thresh:.4f}.')
 
-    filter_switch = [8, 16, 32, 64, 128, 256, 512, 1024]
     #%%
     def obtain_filters_mask(model, thre, CBL_idx, prune_idx):
 
@@ -445,22 +441,9 @@ if __name__ == '__main__':
                     if mask_cnt % 8 !=0:
                         mask_cnt=int((mask_cnt//8+1)*8)
 
-                    # for i in range(len(filter_switch)):
-                    #     if mask_cnt <= filter_switch[i]:
-                    #         mask_cnt = filter_switch[i]
-                    #         break
-
                     this_layer_sort_bn = bn_module.weight.data.abs().clone()
                     _, sorted_index_weights = torch.sort(this_layer_sort_bn,descending=True)
                     mask[sorted_index_weights[:mask_cnt]]=1.
-
-                    # sort_bn_values = torch.sort(this_layer_sort_bn)[0]
-                    # bn_cnt = bn_module.weight.shape[0]
-                    # print("bn_cnt=",bn_cnt)
-                    # print("mask_cnt=", mask_cnt)
-                    # this_layer_thre = sort_bn_values[bn_cnt - mask_cnt]
-                    # mask = obtain_bn_mask(bn_module, this_layer_thre)
-                    # print("mask_num=", int(mask.sum()))
 
                     remain = int(mask.sum())
                     pruned = pruned + mask.shape[0] - remain
@@ -491,8 +474,6 @@ if __name__ == '__main__':
     print('merge the mask of layers connected to shortcut!')
     merge_mask_regular(model, CBLidx2mask, CBLidx2filters)
 
-
-
     def prune_and_eval(model, CBL_idx, CBLidx2mask):
         model_copy = deepcopy(model)
 
@@ -515,8 +496,6 @@ if __name__ == '__main__':
     for i in CBLidx2mask:
         CBLidx2mask[i] = CBLidx2mask[i].clone().cpu().numpy()
 
-
-
     pruned_model = prune_model_keep_size2(model, prune_idx, CBL_idx, CBLidx2mask)
     print("\nnow prune the model but keep size,(actually add offset of BN beta to following layers), let's see how the mAP goes")
 
@@ -526,11 +505,6 @@ if __name__ == '__main__':
     for i in model.module_defs:
         if i['type'] == 'shortcut':
             i.pop('is_access')
-
-    # compact_module_defs = deepcopy(model.module_defs)
-    # for idx in CBL_idx:
-    #     assert compact_module_defs[idx]['type'] == 'convolutional'
-    #     compact_module_defs[idx]['filters'] = str(CBLidx2filters[idx])
 
     compact_module_defs = deepcopy(model.module_defs)
     for idx in CBL_idx:
