@@ -6,8 +6,8 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from models.common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat
-from models.experimental import MixConv2d, CrossConv, C3
+from models.common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat,C3
+from models.experimental import MixConv2d, CrossConv
 from utils.general import check_anchor_order, make_divisible, check_file
 from utils.torch_utils import (
     time_synchronized, fuse_conv_and_bn, model_info, initialize_weights, select_device)

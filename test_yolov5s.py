@@ -165,221 +165,100 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=None):
         cv2.rectangle(img, c1, c2, color, -1, cv2.LINE_AA)  # filled
         cv2.putText(img, label, (c1[0], c1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
-def copy_weight(modelyolov5,model):
+def copy_conv(conv_src,conv_dst):
+    conv_dst[0] = conv_src.conv
+    conv_dst[1] = conv_src.bn
+    conv_dst[2] = conv_src.act
+
+def copy_weight_v4(modelyolov5,model):
     focus = list(modelyolov5.model.children())[0]
-    model.module_list[1][0] = focus.conv.conv
-    model.module_list[1][1] = focus.conv.bn
-    model.module_list[1][2] = focus.conv.act
+    copy_conv(focus.conv, model.module_list[1])
     conv1 = list(modelyolov5.model.children())[1]
-    model.module_list[2][0] = conv1.conv
-    model.module_list[2][1] = conv1.bn
-    model.module_list[2][2] = conv1.act
+    copy_conv(conv1, model.module_list[2])
     cspnet1 = list(modelyolov5.model.children())[2]
-    model.module_list[3][0] = cspnet1.cv2
-    model.module_list[5][0] = cspnet1.cv1.conv
-    model.module_list[5][1] = cspnet1.cv1.bn
-    model.module_list[5][2] = cspnet1.cv1.act
-    model.module_list[9][0] = cspnet1.cv3
-    model.module_list[11][0] = cspnet1.bn
-    model.module_list[11][1] = cspnet1.act
-    model.module_list[6][0] = cspnet1.m[0].cv1.conv
-    model.module_list[6][1] = cspnet1.m[0].cv1.bn
-    model.module_list[6][2] = cspnet1.m[0].cv1.act
-    model.module_list[7][0] = cspnet1.m[0].cv2.conv
-    model.module_list[7][1] = cspnet1.m[0].cv2.bn
-    model.module_list[7][2] = cspnet1.m[0].cv2.act
-    model.module_list[12][0] = cspnet1.cv4.conv
-    model.module_list[12][1] = cspnet1.cv4.bn
-    model.module_list[12][2] = cspnet1.cv4.act
+    copy_conv(cspnet1.cv2, model.module_list[3])
+    copy_conv(cspnet1.cv1, model.module_list[5])
+    copy_conv(cspnet1.m[0].cv1, model.module_list[6])
+    copy_conv(cspnet1.m[0].cv2, model.module_list[7])
+    copy_conv(cspnet1.cv3, model.module_list[10])
     conv2 = list(modelyolov5.model.children())[3]
-    model.module_list[13][0] = conv2.conv
-    model.module_list[13][1] = conv2.bn
-    model.module_list[13][2] = conv2.act
+    copy_conv(conv2, model.module_list[11])
     cspnet2 = list(modelyolov5.model.children())[4]
-    model.module_list[14][0] = cspnet2.cv2
-    model.module_list[16][0] = cspnet2.cv1.conv
-    model.module_list[16][1] = cspnet2.cv1.bn
-    model.module_list[16][2] = cspnet2.cv1.act
-    model.module_list[26][0] = cspnet2.cv3
-    model.module_list[28][0] = cspnet2.bn
-    model.module_list[28][1] = cspnet2.act
-    model.module_list[29][0] = cspnet2.cv4.conv
-    model.module_list[29][1] = cspnet2.cv4.bn
-    model.module_list[29][2] = cspnet2.cv4.act
-    model.module_list[17][0] = cspnet2.m[0].cv1.conv
-    model.module_list[17][1] = cspnet2.m[0].cv1.bn
-    model.module_list[17][2] = cspnet2.m[0].cv1.act
-    model.module_list[18][0] = cspnet2.m[0].cv2.conv
-    model.module_list[18][1] = cspnet2.m[0].cv2.bn
-    model.module_list[18][2] = cspnet2.m[0].cv2.act
-    model.module_list[20][0] = cspnet2.m[1].cv1.conv
-    model.module_list[20][1] = cspnet2.m[1].cv1.bn
-    model.module_list[20][2] = cspnet2.m[1].cv1.act
-    model.module_list[21][0] = cspnet2.m[1].cv2.conv
-    model.module_list[21][1] = cspnet2.m[1].cv2.bn
-    model.module_list[21][2] = cspnet2.m[1].cv2.act
-    model.module_list[23][0] = cspnet2.m[2].cv1.conv
-    model.module_list[23][1] = cspnet2.m[2].cv1.bn
-    model.module_list[23][2] = cspnet2.m[2].cv1.act
-    model.module_list[24][0] = cspnet2.m[2].cv2.conv
-    model.module_list[24][1] = cspnet2.m[2].cv2.bn
-    model.module_list[24][2] = cspnet2.m[2].cv2.act
+    copy_conv(cspnet2.cv2, model.module_list[12])
+    copy_conv(cspnet2.cv1, model.module_list[14])
+    copy_conv(cspnet2.m[0].cv1, model.module_list[15])
+    copy_conv(cspnet2.m[0].cv2, model.module_list[16])
+    copy_conv(cspnet2.m[1].cv1, model.module_list[18])
+    copy_conv(cspnet2.m[1].cv2, model.module_list[19])
+    copy_conv(cspnet2.m[2].cv1, model.module_list[21])
+    copy_conv(cspnet2.m[2].cv2, model.module_list[22])
+    copy_conv(cspnet2.cv3, model.module_list[25])
     conv3 = list(modelyolov5.model.children())[5]
-    model.module_list[30][0] = conv3.conv
-    model.module_list[30][1] = conv3.bn
-    model.module_list[30][2] = conv3.act
+    copy_conv(conv3, model.module_list[26])
     cspnet3 = list(modelyolov5.model.children())[6]
-    model.module_list[31][0] = cspnet3.cv2
-    model.module_list[33][0] = cspnet3.cv1.conv
-    model.module_list[33][1] = cspnet3.cv1.bn
-    model.module_list[33][2] = cspnet3.cv1.act
-    model.module_list[43][0] = cspnet3.cv3
-    model.module_list[45][0] = cspnet3.bn
-    model.module_list[45][1] = cspnet3.act
-    model.module_list[46][0] = cspnet3.cv4.conv
-    model.module_list[46][1] = cspnet3.cv4.bn
-    model.module_list[46][2] = cspnet3.cv4.act
-    model.module_list[34][0] = cspnet3.m[0].cv1.conv
-    model.module_list[34][1] = cspnet3.m[0].cv1.bn
-    model.module_list[34][2] = cspnet3.m[0].cv1.act
-    model.module_list[35][0] = cspnet3.m[0].cv2.conv
-    model.module_list[35][1] = cspnet3.m[0].cv2.bn
-    model.module_list[35][2] = cspnet3.m[0].cv2.act
-    model.module_list[37][0] = cspnet3.m[1].cv1.conv
-    model.module_list[37][1] = cspnet3.m[1].cv1.bn
-    model.module_list[37][2] = cspnet3.m[1].cv1.act
-    model.module_list[38][0] = cspnet3.m[1].cv2.conv
-    model.module_list[38][1] = cspnet3.m[1].cv2.bn
-    model.module_list[38][2] = cspnet3.m[1].cv2.act
-    model.module_list[40][0] = cspnet3.m[2].cv1.conv
-    model.module_list[40][1] = cspnet3.m[2].cv1.bn
-    model.module_list[40][2] = cspnet3.m[2].cv1.act
-    model.module_list[41][0] = cspnet3.m[2].cv2.conv
-    model.module_list[41][1] = cspnet3.m[2].cv2.bn
-    model.module_list[41][2] = cspnet3.m[2].cv2.act
+    copy_conv(cspnet3.cv2, model.module_list[27])
+    copy_conv(cspnet3.cv1, model.module_list[29])
+    copy_conv(cspnet3.m[0].cv1, model.module_list[30])
+    copy_conv(cspnet3.m[0].cv2, model.module_list[31])
+    copy_conv(cspnet3.m[1].cv1, model.module_list[33])
+    copy_conv(cspnet3.m[1].cv2, model.module_list[34])
+    copy_conv(cspnet3.m[2].cv1, model.module_list[36])
+    copy_conv(cspnet3.m[2].cv2, model.module_list[37])
+    copy_conv(cspnet3.cv3, model.module_list[40])
     conv4 = list(modelyolov5.model.children())[7]
-    model.module_list[47][0] = conv4.conv
-    model.module_list[47][1] = conv4.bn
-    model.module_list[47][2] = conv4.act
+    copy_conv(conv4, model.module_list[41])
     spp = list(modelyolov5.model.children())[8]
-    model.module_list[48][0] = spp.cv1.conv
-    model.module_list[48][1] = spp.cv1.bn
-    model.module_list[48][2] = spp.cv1.act
-    model.module_list[49] = spp.m[0]
-    model.module_list[51] = spp.m[1]
-    model.module_list[53] = spp.m[2]
-    model.module_list[55][0] = spp.cv2.conv
-    model.module_list[55][1] = spp.cv2.bn
-    model.module_list[55][2] = spp.cv2.act
+    copy_conv(spp.cv1, model.module_list[42])
+    model.module_list[43] = spp.m[0]
+    model.module_list[45] = spp.m[1]
+    model.module_list[47] = spp.m[2]
+    copy_conv(spp.cv2, model.module_list[49])
     cspnet4 = list(modelyolov5.model.children())[9]
-    model.module_list[56][0] = cspnet4.cv2
-    model.module_list[58][0] = cspnet4.cv1.conv
-    model.module_list[58][1] = cspnet4.cv1.bn
-    model.module_list[58][2] = cspnet4.cv1.act
-    model.module_list[61][0] = cspnet4.cv3
-    model.module_list[63][0] = cspnet4.bn
-    model.module_list[63][1] = cspnet4.act
-    model.module_list[64][0] = cspnet4.cv4.conv
-    model.module_list[64][1] = cspnet4.cv4.bn
-    model.module_list[64][2] = cspnet4.cv4.act
-    model.module_list[59][0] = cspnet4.m[0].cv1.conv
-    model.module_list[59][1] = cspnet4.m[0].cv1.bn
-    model.module_list[59][2] = cspnet4.m[0].cv1.act
-    model.module_list[60][0] = cspnet4.m[0].cv2.conv
-    model.module_list[60][1] = cspnet4.m[0].cv2.bn
-    model.module_list[60][2] = cspnet4.m[0].cv2.act
+    copy_conv(cspnet4.cv2, model.module_list[50])
+    copy_conv(cspnet4.cv1, model.module_list[52])
+    copy_conv(cspnet4.m[0].cv1, model.module_list[53])
+    copy_conv(cspnet4.m[0].cv2, model.module_list[54])
+    copy_conv(cspnet4.cv3, model.module_list[56])
     conv5 = list(modelyolov5.model.children())[10]
-    model.module_list[65][0] = conv5.conv
-    model.module_list[65][1] = conv5.bn
-    model.module_list[65][2] = conv5.act
+    copy_conv(conv5, model.module_list[57])
     upsample1 = list(modelyolov5.model.children())[11]
-    model.module_list[66] = upsample1
+    model.module_list[58] = upsample1
     cspnet5 = list(modelyolov5.model.children())[13]
-    model.module_list[68][0] = cspnet5.cv2
-    model.module_list[70][0] = cspnet5.cv1.conv
-    model.module_list[70][1] = cspnet5.cv1.bn
-    model.module_list[70][2] = cspnet5.cv1.act
-    model.module_list[73][0] = cspnet5.cv3
-    model.module_list[75][0] = cspnet5.bn
-    model.module_list[75][1] = cspnet5.act
-    model.module_list[76][0] = cspnet5.cv4.conv
-    model.module_list[76][1] = cspnet5.cv4.bn
-    model.module_list[76][2] = cspnet5.cv4.act
-    model.module_list[71][0] = cspnet5.m[0].cv1.conv
-    model.module_list[71][1] = cspnet5.m[0].cv1.bn
-    model.module_list[71][2] = cspnet5.m[0].cv1.act
-    model.module_list[72][0] = cspnet5.m[0].cv2.conv
-    model.module_list[72][1] = cspnet5.m[0].cv2.bn
-    model.module_list[72][2] = cspnet5.m[0].cv2.act
+    copy_conv(cspnet5.cv2, model.module_list[60])
+    copy_conv(cspnet5.cv1, model.module_list[62])
+    copy_conv(cspnet5.m[0].cv1, model.module_list[63])
+    copy_conv(cspnet5.m[0].cv2, model.module_list[64])
+    copy_conv(cspnet5.cv3, model.module_list[66])
     conv6 = list(modelyolov5.model.children())[14]
-    model.module_list[77][0] = conv6.conv
-    model.module_list[77][1] = conv6.bn
-    model.module_list[77][2] = conv6.act
+    copy_conv(conv6, model.module_list[67])
     upsample2 = list(modelyolov5.model.children())[15]
-    model.module_list[78] = upsample2
+    model.module_list[68] = upsample2
     cspnet6 = list(modelyolov5.model.children())[17]
-    model.module_list[80][0] = cspnet6.cv2
-    model.module_list[82][0] = cspnet6.cv1.conv
-    model.module_list[82][1] = cspnet6.cv1.bn
-    model.module_list[82][2] = cspnet6.cv1.act
-    model.module_list[85][0] = cspnet6.cv3
-    model.module_list[87][0] = cspnet6.bn
-    model.module_list[87][1] = cspnet6.act
-    model.module_list[88][0] = cspnet6.cv4.conv
-    model.module_list[88][1] = cspnet6.cv4.bn
-    model.module_list[88][2] = cspnet6.cv4.act
-    model.module_list[83][0] = cspnet6.m[0].cv1.conv
-    model.module_list[83][1] = cspnet6.m[0].cv1.bn
-    model.module_list[83][2] = cspnet6.m[0].cv1.act
-    model.module_list[84][0] = cspnet6.m[0].cv2.conv
-    model.module_list[84][1] = cspnet6.m[0].cv2.bn
-    model.module_list[84][2] = cspnet6.m[0].cv2.act
+    copy_conv(cspnet6.cv2, model.module_list[70])
+    copy_conv(cspnet6.cv1, model.module_list[72])
+    copy_conv(cspnet6.m[0].cv1, model.module_list[73])
+    copy_conv(cspnet6.m[0].cv2, model.module_list[74])
+    copy_conv(cspnet6.cv3, model.module_list[76])
     conv7 = list(modelyolov5.model.children())[18]
-    model.module_list[92][0] = conv7.conv
-    model.module_list[92][1] = conv7.bn
-    model.module_list[92][2] = conv7.act
+    copy_conv(conv7, model.module_list[80])
     cspnet7 = list(modelyolov5.model.children())[20]
-    model.module_list[94][0] = cspnet7.cv2
-    model.module_list[96][0] = cspnet7.cv1.conv
-    model.module_list[96][1] = cspnet7.cv1.bn
-    model.module_list[96][2] = cspnet7.cv1.act
-    model.module_list[99][0] = cspnet7.cv3
-    model.module_list[101][0] = cspnet7.bn
-    model.module_list[101][1] = cspnet7.act
-    model.module_list[102][0] = cspnet7.cv4.conv
-    model.module_list[102][1] = cspnet7.cv4.bn
-    model.module_list[102][2] = cspnet7.cv4.act
-    model.module_list[97][0] = cspnet7.m[0].cv1.conv
-    model.module_list[97][1] = cspnet7.m[0].cv1.bn
-    model.module_list[97][2] = cspnet7.m[0].cv1.act
-    model.module_list[98][0] = cspnet7.m[0].cv2.conv
-    model.module_list[98][1] = cspnet7.m[0].cv2.bn
-    model.module_list[98][2] = cspnet7.m[0].cv2.act
+    copy_conv(cspnet7.cv2, model.module_list[82])
+    copy_conv(cspnet7.cv1, model.module_list[84])
+    copy_conv(cspnet7.m[0].cv1, model.module_list[85])
+    copy_conv(cspnet7.m[0].cv2, model.module_list[86])
+    copy_conv(cspnet7.cv3, model.module_list[88])
     conv8 = list(modelyolov5.model.children())[21]
-    model.module_list[106][0] = conv8.conv
-    model.module_list[106][1] = conv8.bn
-    model.module_list[106][2] = conv8.act
+    copy_conv(conv8, model.module_list[92])
     cspnet8 = list(modelyolov5.model.children())[23]
-    model.module_list[108][0] = cspnet8.cv2
-    model.module_list[110][0] = cspnet8.cv1.conv
-    model.module_list[110][1] = cspnet8.cv1.bn
-    model.module_list[110][2] = cspnet8.cv1.act
-    model.module_list[113][0] = cspnet8.cv3
-    model.module_list[115][0] = cspnet8.bn
-    model.module_list[115][1] = cspnet8.act
-    model.module_list[116][0] = cspnet8.cv4.conv
-    model.module_list[116][1] = cspnet8.cv4.bn
-    model.module_list[116][2] = cspnet8.cv4.act
-    model.module_list[111][0] = cspnet8.m[0].cv1.conv
-    model.module_list[111][1] = cspnet8.m[0].cv1.bn
-    model.module_list[111][2] = cspnet8.m[0].cv1.act
-    model.module_list[112][0] = cspnet8.m[0].cv2.conv
-    model.module_list[112][1] = cspnet8.m[0].cv2.bn
-    model.module_list[112][2] = cspnet8.m[0].cv2.act
+    copy_conv(cspnet8.cv2, model.module_list[94])
+    copy_conv(cspnet8.cv1, model.module_list[96])
+    copy_conv(cspnet8.m[0].cv1, model.module_list[97])
+    copy_conv(cspnet8.m[0].cv2, model.module_list[98])
+    copy_conv(cspnet8.cv3, model.module_list[100])
     detect = list(modelyolov5.model.children())[24]
-    model.module_list[89][0] = detect.m[0]
-    model.module_list[103][0] = detect.m[1]
-    model.module_list[117][0] = detect.m[2]
+    model.module_list[77][0] = detect.m[0]
+    model.module_list[89][0] = detect.m[1]
+    model.module_list[101][0] = detect.m[2]
 
 def initialize_weights(model):
     for m in model.modules():
@@ -394,21 +273,19 @@ def initialize_weights(model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v3.cfg', help='cfg file path')
-    parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/yolov5s.pt', help='sparse model weights')
-    parser.add_argument('--percent', type=float, default=0.6, help='channel prune percent')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v4.cfg', help='cfg file path')
+    parser.add_argument('--data', type=str, default='data/coco.data', help='*.data file path')
+    parser.add_argument('--weights', type=str, default='weights/yolov5s_v4.pt', help='sparse model weights')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
     print(opt)
-
 
     img_size = opt.img_size
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     #the way of loading yolov5s
-    # ckpt = torch.load('last_s.pt', map_location=device)  # load checkpoint
-    # modelyolov5 = Model('cfg/yolov5s.yaml', nc=2).to(device)
+    # ckpt = torch.load(opt.weights, map_location=device)  # load checkpoint
+    # modelyolov5 = Model('models/yolov5s_v4.yaml', nc=80).to(device)
     # exclude = ['anchor']  # exclude keys
     # ckpt['model'] = {k: v for k, v in ckpt['model'].float().state_dict().items()
     #                  if k in modelyolov5.state_dict() and not any(x in k for x in exclude)
@@ -419,23 +296,12 @@ if __name__ == '__main__':
     modelyolov5=torch.load(opt.weights, map_location=device)['model'].float().eval()
     modelyolov5.model[24].export = False  # onnx export
 
-    model=modelyolov5
-
-    #load prune model
-    # model_prune = Darknet(opt.cfg, (img_size, img_size))
-    # initialize_weights(model_prune)
-    # model_prune.load_state_dict(torch.load(opt.weights)['model'].state_dict())
-    # # model_prune.fuse()  #fuse
-    # model_prune.module_list.to(device)
-
-    #load prune finetune model
-    # model_prune=torch.load('last_prune.pt')['model'].float().eval()
+    # model=modelyolov5
 
     #load yolov5s from cfg
-    # model = Darknet(opt.cfg, (img_size, img_size)).to(device)
-    # copy_weight(modelyolov5,model)
+    model = Darknet(opt.cfg, (img_size, img_size)).to(device)
+    copy_weight_v4(modelyolov5,model)
 
-    # path='/home/lishuang/Disk/gitlab/traincode/yolov3-channel-and-layer-pruning-master/2_31746253093C100D_2018-12-10-21-56-37-998_0_75_636_307_6.jpg'
     path='data/samples/bus.jpg'
     img0 = cv2.imread(path)  # BGR
     # Padded resize
@@ -456,9 +322,6 @@ if __name__ == '__main__':
     model.eval()
     pred = model(img)[0]
 
-    # model_prune.eval()
-    # pred = model_prune(img)[0]
-
     pred = non_max_suppressionv5(pred, 0.4, 0.5, classes=None,
                                agnostic=False)
     # Process detections
@@ -471,7 +334,22 @@ if __name__ == '__main__':
             for *xyxy, conf, cls in det:
                 label = '%s %.2f' % (str(int(cls)), conf)
                 plot_one_box(xyxy, img0, label=label, color=[random.randint(0, 255) for _ in range(3)], line_thickness=3)
+            cv2.imwrite("v5_cfg.jpg", img0)
+
+    modelyolov5.eval()
+    pred = modelyolov5(img)[0]
+
+    pred = non_max_suppressionv5(pred, 0.4, 0.5, classes=None,
+                                 agnostic=False)
+    # Process detections
+    for i, det in enumerate(pred):  # detections per image
+        if det is not None and len(det):
+            # Rescale boxes from img_size to im0 size
+            det[:, :4] = scale_coords(img.shape[2:], det[:, :4], img0.shape).round()
+
+            # Write results
+            for *xyxy, conf, cls in det:
+                label = '%s %.2f' % (str(int(cls)), conf)
+                plot_one_box(xyxy, img0, label=label, color=[random.randint(0, 255) for _ in range(3)],
+                             line_thickness=3)
             cv2.imwrite("v5.jpg", img0)
-
-
-
