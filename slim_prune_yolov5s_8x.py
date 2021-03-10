@@ -9,101 +9,6 @@ from utils.prune_utils import *
 import argparse
 import torchvision
 
-def copy_conv(conv_src,conv_dst):
-    conv_dst[0] = conv_src.conv
-    conv_dst[1] = conv_src.bn
-    conv_dst[2] = conv_src.act
-
-def copy_weight_v4(modelyolov5,model):
-    focus = list(modelyolov5.model.children())[0]
-    copy_conv(focus.conv, model.module_list[1])
-    conv1 = list(modelyolov5.model.children())[1]
-    copy_conv(conv1, model.module_list[2])
-    cspnet1 = list(modelyolov5.model.children())[2]
-    copy_conv(cspnet1.cv2, model.module_list[3])
-    copy_conv(cspnet1.cv1, model.module_list[5])
-    copy_conv(cspnet1.m[0].cv1, model.module_list[6])
-    copy_conv(cspnet1.m[0].cv2, model.module_list[7])
-    copy_conv(cspnet1.cv3, model.module_list[10])
-    conv2 = list(modelyolov5.model.children())[3]
-    copy_conv(conv2, model.module_list[11])
-    cspnet2 = list(modelyolov5.model.children())[4]
-    copy_conv(cspnet2.cv2, model.module_list[12])
-    copy_conv(cspnet2.cv1, model.module_list[14])
-    copy_conv(cspnet2.m[0].cv1, model.module_list[15])
-    copy_conv(cspnet2.m[0].cv2, model.module_list[16])
-    copy_conv(cspnet2.m[1].cv1, model.module_list[18])
-    copy_conv(cspnet2.m[1].cv2, model.module_list[19])
-    copy_conv(cspnet2.m[2].cv1, model.module_list[21])
-    copy_conv(cspnet2.m[2].cv2, model.module_list[22])
-    copy_conv(cspnet2.cv3, model.module_list[25])
-    conv3 = list(modelyolov5.model.children())[5]
-    copy_conv(conv3, model.module_list[26])
-    cspnet3 = list(modelyolov5.model.children())[6]
-    copy_conv(cspnet3.cv2, model.module_list[27])
-    copy_conv(cspnet3.cv1, model.module_list[29])
-    copy_conv(cspnet3.m[0].cv1, model.module_list[30])
-    copy_conv(cspnet3.m[0].cv2, model.module_list[31])
-    copy_conv(cspnet3.m[1].cv1, model.module_list[33])
-    copy_conv(cspnet3.m[1].cv2, model.module_list[34])
-    copy_conv(cspnet3.m[2].cv1, model.module_list[36])
-    copy_conv(cspnet3.m[2].cv2, model.module_list[37])
-    copy_conv(cspnet3.cv3, model.module_list[40])
-    conv4 = list(modelyolov5.model.children())[7]
-    copy_conv(conv4, model.module_list[41])
-    spp = list(modelyolov5.model.children())[8]
-    copy_conv(spp.cv1, model.module_list[42])
-    model.module_list[43] = spp.m[0]
-    model.module_list[45] = spp.m[1]
-    model.module_list[47] = spp.m[2]
-    copy_conv(spp.cv2, model.module_list[49])
-    cspnet4 = list(modelyolov5.model.children())[9]
-    copy_conv(cspnet4.cv2, model.module_list[50])
-    copy_conv(cspnet4.cv1, model.module_list[52])
-    copy_conv(cspnet4.m[0].cv1, model.module_list[53])
-    copy_conv(cspnet4.m[0].cv2, model.module_list[54])
-    copy_conv(cspnet4.cv3, model.module_list[56])
-    conv5 = list(modelyolov5.model.children())[10]
-    copy_conv(conv5, model.module_list[57])
-    upsample1 = list(modelyolov5.model.children())[11]
-    model.module_list[58] = upsample1
-    cspnet5 = list(modelyolov5.model.children())[13]
-    copy_conv(cspnet5.cv2, model.module_list[60])
-    copy_conv(cspnet5.cv1, model.module_list[62])
-    copy_conv(cspnet5.m[0].cv1, model.module_list[63])
-    copy_conv(cspnet5.m[0].cv2, model.module_list[64])
-    copy_conv(cspnet5.cv3, model.module_list[66])
-    conv6 = list(modelyolov5.model.children())[14]
-    copy_conv(conv6, model.module_list[67])
-    upsample2 = list(modelyolov5.model.children())[15]
-    model.module_list[68] = upsample2
-    cspnet6 = list(modelyolov5.model.children())[17]
-    copy_conv(cspnet6.cv2, model.module_list[70])
-    copy_conv(cspnet6.cv1, model.module_list[72])
-    copy_conv(cspnet6.m[0].cv1, model.module_list[73])
-    copy_conv(cspnet6.m[0].cv2, model.module_list[74])
-    copy_conv(cspnet6.cv3, model.module_list[76])
-    conv7 = list(modelyolov5.model.children())[18]
-    copy_conv(conv7, model.module_list[80])
-    cspnet7 = list(modelyolov5.model.children())[20]
-    copy_conv(cspnet7.cv2, model.module_list[82])
-    copy_conv(cspnet7.cv1, model.module_list[84])
-    copy_conv(cspnet7.m[0].cv1, model.module_list[85])
-    copy_conv(cspnet7.m[0].cv2, model.module_list[86])
-    copy_conv(cspnet7.cv3, model.module_list[88])
-    conv8 = list(modelyolov5.model.children())[21]
-    copy_conv(conv8, model.module_list[92])
-    cspnet8 = list(modelyolov5.model.children())[23]
-    copy_conv(cspnet8.cv2, model.module_list[94])
-    copy_conv(cspnet8.cv1, model.module_list[96])
-    copy_conv(cspnet8.m[0].cv1, model.module_list[97])
-    copy_conv(cspnet8.m[0].cv2, model.module_list[98])
-    copy_conv(cspnet8.cv3, model.module_list[100])
-    detect = list(modelyolov5.model.children())[24]
-    model.module_list[77][0] = detect.m[0]
-    model.module_list[89][0] = detect.m[1]
-    model.module_list[101][0] = detect.m[2]
-
 def copy_weight(modelyolov5,model):
     focus = list(modelyolov5.model.children())[0]
     model.module_list[1][0] = focus.conv.conv
@@ -322,10 +227,10 @@ def copy_weight(modelyolov5,model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_hand.cfg', help='cfg file path')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v3_hand.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/oxfordhand.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/last_s_to_prune.pt', help='sparse model weights')
-    parser.add_argument('--global_percent', type=float, default=0.8, help='global channel prune percent')
+    parser.add_argument('--weights', type=str, default='weights/last_v3s.pt', help='sparse model weights')
+    parser.add_argument('--global_percent', type=float, default=0.5, help='global channel prune percent')
     parser.add_argument('--layer_keep', type=float, default=0.01, help='channel keep percent per layer')
     parser.add_argument('--img_size', type=int, default=640, help='inference size (pixels)')
     opt = parser.parse_args()
@@ -336,13 +241,7 @@ if __name__ == '__main__':
     model = Darknet(opt.cfg, (img_size, img_size)).to(device)
 
     modelyolov5 = torch.load(opt.weights, map_location=device)['model'].float()  # load FP32 model
-    YOLOV5_V4=True
-    if YOLOV5_V4:
-        #yolov5-v4
-        copy_weight_v4(modelyolov5, model)
-    else:
-        #yolov5-v3 yolov5-v2
-        copy_weight(modelyolov5, model)
+    copy_weight(modelyolov5, model)
 
     # model.load_state_dict(torch.load(opt.weights)['model'].state_dict())
 
@@ -368,7 +267,6 @@ if __name__ == '__main__':
 
     print(f'Global Threshold should be less than {thresh:.4f}.')
 
-    filter_switch = [8, 16, 32, 64, 128, 256, 512, 1024]
     #%%
     def obtain_filters_mask(model, thre, CBL_idx, prune_idx):
 
@@ -445,22 +343,9 @@ if __name__ == '__main__':
                     if mask_cnt % 8 !=0:
                         mask_cnt=int((mask_cnt//8+1)*8)
 
-                    # for i in range(len(filter_switch)):
-                    #     if mask_cnt <= filter_switch[i]:
-                    #         mask_cnt = filter_switch[i]
-                    #         break
-
                     this_layer_sort_bn = bn_module.weight.data.abs().clone()
                     _, sorted_index_weights = torch.sort(this_layer_sort_bn,descending=True)
                     mask[sorted_index_weights[:mask_cnt]]=1.
-
-                    # sort_bn_values = torch.sort(this_layer_sort_bn)[0]
-                    # bn_cnt = bn_module.weight.shape[0]
-                    # print("bn_cnt=",bn_cnt)
-                    # print("mask_cnt=", mask_cnt)
-                    # this_layer_thre = sort_bn_values[bn_cnt - mask_cnt]
-                    # mask = obtain_bn_mask(bn_module, this_layer_thre)
-                    # print("mask_num=", int(mask.sum()))
 
                     remain = int(mask.sum())
                     pruned = pruned + mask.shape[0] - remain
@@ -526,11 +411,6 @@ if __name__ == '__main__':
     for i in model.module_defs:
         if i['type'] == 'shortcut':
             i.pop('is_access')
-
-    # compact_module_defs = deepcopy(model.module_defs)
-    # for idx in CBL_idx:
-    #     assert compact_module_defs[idx]['type'] == 'convolutional'
-    #     compact_module_defs[idx]['filters'] = str(CBLidx2filters[idx])
 
     compact_module_defs = deepcopy(model.module_defs)
     for idx in CBL_idx:
