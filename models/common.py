@@ -24,8 +24,8 @@ class Conv(nn.Module):
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
         #self.act = nn.LeakyReLU(0.1, inplace=True) if act else nn.Identity() #yolov5_v2
-        #self.act = nn.Hardswish() if act else nn.Identity() #yolov5_v3
-        self.act = nn.SiLU() if act is True else (act if isinstance(act, nn.Module) else nn.Identity()) #yolov5_v4
+        self.act = nn.Hardswish() if act else nn.Identity() #yolov5_v3
+        # self.act = nn.SiLU() if act is True else (act if isinstance(act, nn.Module) else nn.Identity()) #yolov5_v4
 
     def forward(self, x):
         return self.act(self.bn(self.conv(x)))

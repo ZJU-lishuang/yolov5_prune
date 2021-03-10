@@ -57,7 +57,7 @@ def initialize_weights(model):
         elif t is nn.BatchNorm2d:
             m.eps = 1e-3
             m.momentum = 0.03
-        elif t in [nn.LeakyReLU, nn.ReLU, nn.ReLU6]:
+        elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6]:
             m.inplace = True
 
 def fuse_conv_and_bn(conv, bn):
