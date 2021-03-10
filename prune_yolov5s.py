@@ -376,7 +376,7 @@ if __name__ == '__main__':
     highest_thre = min(highest_thre)
 
     # 找到highest_thre对应的下标对应的百分比
-    percent_limit = (sorted_bn==highest_thre).nonzero()[0].item()/len(bn_weights)
+    percent_limit = (sorted_bn==highest_thre).nonzero().item()/len(bn_weights)
 
     print(f'Suggested Gamma threshold should be less than {highest_thre:.4f}.')
     print(f'The corresponding prune ratio is {percent_limit:.3f}, but you can set higher.')
