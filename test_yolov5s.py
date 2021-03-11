@@ -389,15 +389,14 @@ def initialize_weights(model):
         elif t is nn.BatchNorm2d:
             m.eps = 1e-3
             m.momentum = 0.03
-        elif t in [nn.LeakyReLU, nn.ReLU, nn.ReLU6]:
+        elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6]:
             m.inplace = True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v3.cfg', help='cfg file path')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v2.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/fangweisui.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/yolov5s.pt', help='sparse model weights')
-    parser.add_argument('--percent', type=float, default=0.6, help='channel prune percent')
+    parser.add_argument('--weights', type=str, default='weights/yolov5s_v2.pt', help='sparse model weights')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     opt = parser.parse_args()
     print(opt)
@@ -407,8 +406,8 @@ if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     #the way of loading yolov5s
-    # ckpt = torch.load('last_s.pt', map_location=device)  # load checkpoint
-    # modelyolov5 = Model('cfg/yolov5s.yaml', nc=2).to(device)
+    # ckpt = torch.load(opt.weights, map_location=device)  # load checkpoint
+    # modelyolov5 = Model('models/yolov5s_v3.yaml', nc=80).to(device)
     # exclude = ['anchor']  # exclude keys
     # ckpt['model'] = {k: v for k, v in ckpt['model'].float().state_dict().items()
     #                  if k in modelyolov5.state_dict() and not any(x in k for x in exclude)
@@ -419,23 +418,14 @@ if __name__ == '__main__':
     modelyolov5=torch.load(opt.weights, map_location=device)['model'].float().eval()
     modelyolov5.model[24].export = False  # onnx export
 
-    model=modelyolov5
+    initialize_weights(modelyolov5)
 
-    #load prune model
-    # model_prune = Darknet(opt.cfg, (img_size, img_size))
-    # initialize_weights(model_prune)
-    # model_prune.load_state_dict(torch.load(opt.weights)['model'].state_dict())
-    # # model_prune.fuse()  #fuse
-    # model_prune.module_list.to(device)
-
-    #load prune finetune model
-    # model_prune=torch.load('last_prune.pt')['model'].float().eval()
+   
 
     #load yolov5s from cfg
-    # model = Darknet(opt.cfg, (img_size, img_size)).to(device)
-    # copy_weight(modelyolov5,model)
+    model = Darknet(opt.cfg, (img_size, img_size)).to(device)
+    copy_weight(modelyolov5,model)
 
-    # path='/home/lishuang/Disk/gitlab/traincode/yolov3-channel-and-layer-pruning-master/2_31746253093C100D_2018-12-10-21-56-37-998_0_75_636_307_6.jpg'
     path='data/samples/bus.jpg'
     img0 = cv2.imread(path)  # BGR
     # Padded resize
@@ -450,14 +440,8 @@ if __name__ == '__main__':
     if img.ndimension() == 3:
         img = img.unsqueeze(0)
 
-    # modelyolov5.eval()
-
-
     model.eval()
     pred = model(img)[0]
-
-    # model_prune.eval()
-    # pred = model_prune(img)[0]
 
     pred = non_max_suppressionv5(pred, 0.4, 0.5, classes=None,
                                agnostic=False)
@@ -471,6 +455,24 @@ if __name__ == '__main__':
             for *xyxy, conf, cls in det:
                 label = '%s %.2f' % (str(int(cls)), conf)
                 plot_one_box(xyxy, img0, label=label, color=[random.randint(0, 255) for _ in range(3)], line_thickness=3)
+            cv2.imwrite("v5_cfg.jpg", img0)
+
+    modelyolov5.eval()
+    pred = modelyolov5(img)[0]
+
+    pred = non_max_suppressionv5(pred, 0.4, 0.5, classes=None,
+                                 agnostic=False)
+    # Process detections
+    for i, det in enumerate(pred):  # detections per image
+        if det is not None and len(det):
+            # Rescale boxes from img_size to im0 size
+            det[:, :4] = scale_coords(img.shape[2:], det[:, :4], img0.shape).round()
+
+            # Write results
+            for *xyxy, conf, cls in det:
+                label = '%s %.2f' % (str(int(cls)), conf)
+                plot_one_box(xyxy, img0, label=label, color=[random.randint(0, 255) for _ in range(3)],
+                             line_thickness=3)
             cv2.imwrite("v5.jpg", img0)
 
 
