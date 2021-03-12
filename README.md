@@ -7,13 +7,13 @@
 ## 实例流程
 数据集下载[dataset](http://www.robots.ox.ac.uk/~vgg/data/hands/downloads/hand_dataset.tar.gz)<br>
 ### STEP1:基础训练 
-附件：[训练记录](https://drive.google.com/drive/folders/1xHq4m-X5vrrCtIajyMFTO8ClZlxJOjD_?usp=sharing)<br>
+附件：[训练记录](https://drive.google.com/drive/folders/1s7pYFMFObWGyFNa3ghZFvY0_tNMgzZAi?usp=sharing)<br>
 ### STEP2:稀疏训练     
-附件：[稀疏训练记录](https://drive.google.com/drive/folders/1XTkS_aTzc9MEGZVtLxMISE2WLIKRv4hT?usp=sharing)<br>
+附件：[稀疏训练记录](https://drive.google.com/drive/folders/1grwe5v3UfEoLlj5G5ljHSVGYGy1x5YEK?usp=sharing)<br>
 ### STEP3:八倍通道剪枝  
-附件：[剪枝后模型](https://drive.google.com/drive/folders/1_SPlU2nmy5-TDfL0JsfZqwZxK6pI_Sco?usp=sharing)<br>
+附件：[剪枝后模型](https://drive.google.com/drive/folders/11gmyVhXVwZ_sWW9ZOMG77PbrHIHhMUZX?usp=sharing)<br>
 ### STEP4:微调finetune 
-附件：[微调训练记录](https://drive.google.com/drive/folders/1tDPUGEzCPil5mL1MNS_2IY8knqBvaAGu?usp=sharing)<br>
+附件：[微调训练记录](https://drive.google.com/drive/folders/1saLvFYT-8JeCpz-PyLCi_MUgh6sxzAx6?usp=sharing)<br>
 
 ## 剪枝步骤
 #### STEP1:基础训练
@@ -61,6 +61,13 @@ python slim_prune_yolov5s_8x.py --cfg cfg/yolov5s_v2_hand.cfg --data data/oxford
 示例代码<br>
 ```
 python prune_finetune.py --img 640 --batch 8 --epochs 10 --data ./data/hand.yaml --cfg ./cfg/prune_0.8_keep_0.01_8x_yolov5s_hand.cfg --weights ./weights/prune_0.8_keep_0.01_8x_last_s_to_prune.pt --name prune_hand_s
+```
+
+#### STEP5:剪枝后模型推理
+[yolov5第二版](https://github.com/ZJU-lishuang/yolov5)<br>
+示例代码<br>
+```shell
+python prune_detect.py --weights weights/last_prune_hand_s.pt --img  640 --conf 0.7 --save-txt --source inference/images
 ```
 
 
