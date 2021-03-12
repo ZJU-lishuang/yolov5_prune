@@ -64,4 +64,11 @@ python slim_prune_yolov5s_8x.py --cfg cfg/yolov5s_v4_hand.cfg --data data/oxford
 python prune_finetune.py --img 640 --batch 8 --epochs 50 --data data/coco_hand.yaml --cfg ./cfg/prune_0.5_keep_0.01_8x_yolov5s_v4_hand.cfg --weights ./weights/prune_0.5_keep_0.01_8x_last_v4s.pt --name s_hand_finetune
 ```
 
+#### STEP5:剪枝后模型推理
+[yolov5](https://github.com/ZJU-lishuang/yolov5-v4)<br>
+示例代码<br>
+```shell
+python prune_detect.py --weights weights/last_s_hand_finetune.pt --img  640 --conf 0.7 --save-txt --source inference/images
+```
+
 
