@@ -5,6 +5,8 @@
 
 本项目使用的yolov5为第四版本。
 
+TODO: 已完成蒸馏实验，蒸馏在微调模型上作用明显，近期更新相关代码和步骤。
+
 ## 实例流程
 数据集下载[dataset](http://www.robots.ox.ac.uk/~vgg/data/hands/downloads/hand_dataset.tar.gz)<br>
 ### STEP1:基础训练 
