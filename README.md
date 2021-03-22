@@ -4,8 +4,12 @@
 项目的基本流程是，使用[ultralytics/yolov5](https://github.com/ultralytics/yolov5)训练自己的数据集，在模型性能达到要求但速度未达到要求时，对模型进行剪枝。首先是稀疏化训练，稀疏化训练很重要，如果模型稀疏度不够，剪枝比例过大会导致剪枝后的模型map接近0。剪枝完成后对模型进行微调回复精度。
 
 本项目使用的yolov5为第四版本。
+yolov5第三版本参考[yolov5-v3-prune](https://github.com/ZJU-lishuang/yolov5_prune/tree/v3)
+yolov5第二版本参考[yolov5-v2-prune](https://github.com/ZJU-lishuang/yolov5_prune/tree/v2)
 
-TODO: 已完成蒸馏实验，蒸馏在微调模型上作用明显，近期更新相关代码和步骤。
+TODO： 增加m,l,x的模型剪枝，如果有时间的话。>-<
+
+PS：在开源数据集和不能开源的数据集上模型均剪枝成功。
 
 ## 实例流程
 数据集下载[dataset](http://www.robots.ox.ac.uk/~vgg/data/hands/downloads/hand_dataset.tar.gz)<br>
@@ -17,6 +21,8 @@ TODO: 已完成蒸馏实验，蒸馏在微调模型上作用明显，近期更�
 附件：[剪枝后模型](https://drive.google.com/drive/folders/1V5nA6oGXX43bagpO3cJIFpI0zjAOzt0p?usp=sharing)<br>
 ### STEP4:微调finetune 
 附件：[微调训练记录](https://drive.google.com/drive/folders/1vT_pN_XlMBniF9YXaPj2KeCNZitxYFLA?usp=sharing)<br>
+### STEP4:微调finetune，使用蒸馏技术优化模型，效果由于单纯的微调模型 
+附件：[微调蒸馏训练记录](https://drive.google.com/drive/folders/1T3SGh0FjyjxDckFcKVxpxQHF2XzZ-gfN?usp=sharing)<br>
 
 ## 剪枝步骤
 #### STEP1:基础训练
@@ -64,6 +70,13 @@ python slim_prune_yolov5s_8x.py --cfg cfg/yolov5s_v4_hand.cfg --data data/oxford
 示例代码<br>
 ```
 python prune_finetune.py --img 640 --batch 8 --epochs 50 --data data/coco_hand.yaml --cfg ./cfg/prune_0.5_keep_0.01_8x_yolov5s_v4_hand.cfg --weights ./weights/prune_0.5_keep_0.01_8x_last_v4s.pt --name s_hand_finetune
+```
+
+#### STEP4:微调finetune，使用蒸馏技术优化模型
+[yolov5](https://github.com/ZJU-lishuang/yolov5-v4)<br>
+示例代码<br>
+```
+python prune_finetune.py --img 640 --batch 8 --epochs 50 --data data/coco_hand.yaml --cfg ./cfg/prune_0.5_keep_0.01_8x_yolov5s_v4_hand.cfg --weights ./weights/prune_0.5_keep_0.01_8x_last_v4s.pt --name s_hand_finetune_distill --distill
 ```
 
 #### STEP5:剪枝后模型推理
