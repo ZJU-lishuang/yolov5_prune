@@ -182,7 +182,7 @@ def get_input_mask(module_defs, idx, CBLidx2mask):
 
     if idx == 0:
         return np.ones(3)
-    if idx == 1:
+    if module_defs[idx - 1]['type'] == 'focus':
         return np.ones(12)
     if module_defs[idx - 1]['type'] == 'convolutional':
         return CBLidx2mask[idx - 1]
