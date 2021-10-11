@@ -17,12 +17,14 @@
 *.mov
 *.MOV
 *.avi
-*.data
+*.shapes
 *.json
 
 #data
 data/coco128
 data/hand_dataset
+
+cfg/prune_*.cfg
 
 
 # *.cfg
