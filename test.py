@@ -245,7 +245,7 @@ def test(cfg,
                         continue
 
                     # Best iou, index between pred and targets
-                    m = (pcls == tcls_tensor).nonzero().view(-1)
+                    m = (pcls == tcls_tensor).nonzero(as_tuple=False).view(-1)
                     iou, bi = bbox_iou(pbox, tbox[m]).max(0)
 
                     # If iou > threshold and class is correct mark as correct

@@ -775,7 +775,7 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
         boxes = xywh2xyxy(targets[targets[:, 0] == i, 2:6]).T
         boxes[[0, 2]] *= w
         boxes[[1, 3]] *= h
-        plt.subplot(ns, ns, i + 1).imshow(imgs[i].transpose(1, 2, 0))
+        plt.subplot(int(ns), int(ns), i + 1).imshow(imgs[i].transpose(1, 2, 0))
         plt.plot(boxes[[0, 2, 2, 0, 0]], boxes[[1, 1, 3, 3, 1]], '.-')
         plt.axis('off')
         if paths is not None:
