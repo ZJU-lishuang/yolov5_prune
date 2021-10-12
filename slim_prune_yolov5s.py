@@ -380,8 +380,9 @@ if __name__ == '__main__':
         filters_mask = []
         for idx in CBL_idx:
             # bn_module = model.module_list[idx][1]
-            bn_module = model.module_list[idx][1] if type(
-                model.module_list[idx][1]).__name__ is 'BatchNorm2d' else model.module_list[idx][0]
+            bn_module = model.module_list[idx][1] \
+                if type(model.module_list[idx][1]).__name__ == 'BatchNorm2d' \
+                    else model.module_list[idx][0]
             if idx in prune_idx:
 
                 weight_copy = bn_module.weight.data.abs().clone()
@@ -391,8 +392,7 @@ if __name__ == '__main__':
                     channels_half = int(channels / 2)
                     weight_copy1 = weight_copy[:channels_half]
                     weight_copy2 = weight_copy[channels_half:]
-                    min_channel_num = int(channels_half * opt.layer_keep) if int(
-                        channels_half * opt.layer_keep) > 0 else 1
+                    min_channel_num = int(channels_half * opt.layer_keep) if int(channels_half * opt.layer_keep) > 0 else 1
                     mask1 = weight_copy1.gt(thresh).float()
                     mask2 = weight_copy2.gt(thresh).float()
 
@@ -474,8 +474,9 @@ if __name__ == '__main__':
 
         for idx in CBL_idx:
             # bn_module = model_copy.module_list[idx][1]
-            bn_module = model_copy.module_list[idx][1] if type(
-                model_copy.module_list[idx][1]).__name__ is 'BatchNorm2d' else model_copy.module_list[idx][0]
+            bn_module = model_copy.module_list[idx][1] \
+                if type(model_copy.module_list[idx][1]).__name__ == 'BatchNorm2d' \
+                    else model_copy.module_list[idx][0]
             mask = CBLidx2mask[idx].cuda()
             bn_module.weight.data.mul_(mask)
 
