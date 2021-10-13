@@ -380,7 +380,7 @@ if __name__ == '__main__':
     else:
         high_num=(sorted_bn==highest_thre).nonzero()
     percent_limit = high_num.item()/len(bn_weights)
-    #优化好的模型只有一个极值点
+    #优化好的模型只有一个极值点，上面代码临时使用以方便调试
     # percent_limit = (sorted_bn==highest_thre).nonzero().item()/len(bn_weights)
 
     print(f'Suggested Threshold should be less than {highest_thre:.4f}.')
