@@ -375,7 +375,13 @@ if __name__ == '__main__':
     highest_thre = min(highest_thre)
 
     # 找到highest_thre对应的下标对应的百分比
-    percent_limit = (sorted_bn==highest_thre).nonzero().item()/len(bn_weights)
+    if len((sorted_bn==highest_thre).nonzero()) > 1:
+        high_num=(sorted_bn==highest_thre).nonzero()[1]
+    else:
+        high_num=(sorted_bn==highest_thre).nonzero()
+    percent_limit = high_num.item()/len(bn_weights)
+    #优化好的模型只有一个极值点
+    # percent_limit = (sorted_bn==highest_thre).nonzero().item()/len(bn_weights)
 
     print(f'Suggested Threshold should be less than {highest_thre:.4f}.')
     print(f'The corresponding prune ratio is {percent_limit:.3f},but you can set higher.')
