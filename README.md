@@ -13,6 +13,7 @@ PS：在开源数据集和不能开源的数据集上模型均剪枝成功。
 
 ## 实例流程
 数据集下载[dataset](http://www.robots.ox.ac.uk/~vgg/data/hands/downloads/hand_dataset.tar.gz)<br>
+数据集转为可训练格式[converter](https://github.com/ZJU-lishuang/yolov5-v4/blob/main/data/converter.py)
 ### STEP1:基础训练 
 附件：[训练记录](https://drive.google.com/drive/folders/1v0HZYBhU6d4M2hvEfjia76wYbQlaFz_f?usp=sharing)<br>
 ### STEP2:稀疏训练     
