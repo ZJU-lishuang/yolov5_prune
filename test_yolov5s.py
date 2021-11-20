@@ -302,7 +302,7 @@ if __name__ == '__main__':
     model = Darknet(opt.cfg, (img_size, img_size)).to(device)
     copy_weight_v4(modelyolov5,model)
 
-    path='data/samples/bus.jpg'
+    path='data/images/bus.jpg'
     img0 = cv2.imread(path)  # BGR
     # Padded resize
     img = letterboxv5(img0, new_shape=416)[0]
