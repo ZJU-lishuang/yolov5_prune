@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # model.load_state_dict(torch.load(opt.weights)['model'].state_dict())
 
 
-    eval_model = lambda model:test(model=model,cfg=opt.cfg, data=opt.data, batch_size=16, img_size=img_size)
+    eval_model = lambda model:test(model=model,cfg=opt.cfg, data=opt.data, batch_size=4, img_size=img_size)
     obtain_num_parameters = lambda model:sum([param.nelement() for param in model.parameters()])
 
     print("\nlet's test the original model first:")

@@ -269,7 +269,7 @@ class Darknet(nn.Module):
 
         for i, (mdef, module) in enumerate(zip(self.module_defs, self.module_list)):
             mtype = mdef['type']
-            print("i=",i)
+            # print("i=",i)
             if mtype in ['convolutional', 'upsample', 'maxpool','convolutional_nobias','convolutional_noconv']:
                 x = module(x)
             elif mtype == 'focus':
