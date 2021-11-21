@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v6_hand.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/oxfordhand.data', help='*.data file path')
     parser.add_argument('--weights', type=str, default='weights/last_v6s.pt', help='sparse model weights')
-    parser.add_argument('--global_percent', type=float, default=0.5, help='global channel prune percent')
+    parser.add_argument('--global_percent', type=float, default=0.6, help='global channel prune percent')
     parser.add_argument('--layer_keep', type=float, default=0.01, help='channel keep percent per layer')
     parser.add_argument('--img_size', type=int, default=640, help='inference size (pixels)')
     opt = parser.parse_args()
