@@ -28,6 +28,9 @@ def parse_module_defs(module_defs):
                 ignore_idx.add(i)
             if module_defs[i+1]['type'] == 'convolutional_nobias':
                 ignore_idx.add(i)
+            if module_defs[i + 1]['type'] == 'maxpool' and module_defs[i + 2]['type'] == 'maxpool':
+                # sppf前一个CBL不剪
+                ignore_idx.add(i)
         elif module_def['type'] == 'convolutional_noconv':
             CBL_idx.append(i)
             ignore_idx.add(i)
@@ -66,6 +69,9 @@ def parse_module_defs2(module_defs):
                 #spp前一个CBL不剪 区分spp和tiny
                 ignore_idx.add(i)
             if module_defs[i+1]['type'] == 'route' and 'groups' in module_defs[i+1]:
+                ignore_idx.add(i)
+            if module_defs[i + 1]['type'] == 'maxpool' and module_defs[i + 2]['type'] == 'maxpool':
+                # sppf前一个CBL不剪
                 ignore_idx.add(i)
 
         elif module_def['type'] == 'convolutional_noconv':
