@@ -41,24 +41,27 @@ def copy_c3(c3_src,module_lists,idx,num,shortcut=True):
 
 def copy_weight_v6(modelyolov5,model):
     idx=0
+    depth_multiple=1
+    if 'depth_multiple' in modelyolov5.yaml:
+        depth_multiple=modelyolov5.yaml['depth_multiple']
     conv0 = list(modelyolov5.model.children())[0]
     idx=copy_conv_idx(conv0, model.module_list[idx],idx)
     conv1 = list(modelyolov5.model.children())[1]
     idx=copy_conv_idx(conv1, model.module_list[idx],idx)
     cspnet2 = list(modelyolov5.model.children())[2]
-    idx=copy_c3(cspnet2,model.module_list,idx,1)
+    idx=copy_c3(cspnet2,model.module_list,idx, round(3 * depth_multiple))
     conv3 = list(modelyolov5.model.children())[3]
     idx=copy_conv_idx(conv3, model.module_list[idx],idx)
     cspnet4 = list(modelyolov5.model.children())[4]
-    idx = copy_c3(cspnet4, model.module_list,idx, 2)
+    idx = copy_c3(cspnet4, model.module_list,idx, round(6 * depth_multiple))
     conv5 = list(modelyolov5.model.children())[5]
     idx=copy_conv_idx(conv5, model.module_list[idx],idx)
     cspnet6 = list(modelyolov5.model.children())[6]
-    idx = copy_c3(cspnet6, model.module_list,idx, 3)
+    idx = copy_c3(cspnet6, model.module_list,idx, round(9 * depth_multiple))
     conv7 = list(modelyolov5.model.children())[7]
     idx=copy_conv_idx(conv7, model.module_list[idx],idx)
     cspnet8 = list(modelyolov5.model.children())[8]
-    idx = copy_c3(cspnet8, model.module_list,idx, 1)
+    idx = copy_c3(cspnet8, model.module_list,idx, round(3 * depth_multiple))
     sppf9 = list(modelyolov5.model.children())[9]
     idx=copy_conv_idx(sppf9.cv1, model.module_list[idx],idx)
     model.module_list[idx] = sppf9.m
@@ -78,7 +81,7 @@ def copy_weight_v6(modelyolov5,model):
     #route
     idx=idx+1
     cspnet13 = list(modelyolov5.model.children())[13]
-    idx = copy_c3(cspnet13, model.module_list, idx,1,False)
+    idx = copy_c3(cspnet13, model.module_list, idx,round(3 * depth_multiple),False)
     conv14 = list(modelyolov5.model.children())[14]
     idx=copy_conv_idx(conv14, model.module_list[idx],idx)
     upsample15 = list(modelyolov5.model.children())[15]
@@ -87,7 +90,7 @@ def copy_weight_v6(modelyolov5,model):
     # route
     idx = idx + 1
     cspnet17 = list(modelyolov5.model.children())[17]
-    idx = copy_c3(cspnet17, model.module_list, idx,1, False)
+    idx = copy_c3(cspnet17, model.module_list, idx,round(3 * depth_multiple), False)
     #conv
     conv_detect1_idx=idx
     idx=idx+1
@@ -100,7 +103,7 @@ def copy_weight_v6(modelyolov5,model):
     # route
     idx = idx + 1
     cspnet20 = list(modelyolov5.model.children())[20]
-    idx = copy_c3(cspnet20, model.module_list,idx, 1, False)
+    idx = copy_c3(cspnet20, model.module_list,idx, round(3 * depth_multiple), False)
     # conv
     conv_detect2_idx = idx
     idx = idx + 1
@@ -113,7 +116,7 @@ def copy_weight_v6(modelyolov5,model):
     # route
     idx = idx + 1
     cspnet23 = list(modelyolov5.model.children())[23]
-    idx = copy_c3(cspnet23, model.module_list, idx,1, False)
+    idx = copy_c3(cspnet23, model.module_list, idx,round(3 * depth_multiple), False)
     # conv
     conv_detect3_idx = idx
     detect24 = list(modelyolov5.model.children())[24]
