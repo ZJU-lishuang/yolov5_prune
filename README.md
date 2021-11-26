@@ -7,7 +7,7 @@
 yolov5第三版本参考[yolov5-v3-prune](https://github.com/ZJU-lishuang/yolov5_prune/tree/v3)
 yolov5第二版本参考[yolov5-v2-prune](https://github.com/ZJU-lishuang/yolov5_prune/tree/v2)
 
-TODO： 增加m,l,x的模型剪枝，如果有时间的话。>-<
+DOING： 目前正在yolov5第六版上进行剪枝，已实现l,m,s,n模型剪枝流程且支持多卡。[yolov5-v6-prune](https://github.com/ZJU-lishuang/yolov5_prune/tree/v6)
 
 PS：在开源数据集和不能开源的数据集上模型均剪枝成功。
 
