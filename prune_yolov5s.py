@@ -12,11 +12,11 @@ from utils.model_transfer import copy_weight_v6
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v4.cfg', help='cfg file path')
-    parser.add_argument('--data', type=str, default='data/coco_128img.data', help='*.data file path')
-    parser.add_argument('--weights', type=str, default='weights/yolov5s_v4.pt', help='sparse model weights')
-    parser.add_argument('--percent', type=float, default=0.8, help='channel prune percent')
-    parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov5s_v6_hand.cfg', help='cfg file path')
+    parser.add_argument('--data', type=str, default='data/oxfordhand.data', help='*.data file path')
+    parser.add_argument('--weights', type=str, default='weights/last_v6s_0.pt', help='sparse model weights')
+    parser.add_argument('--percent', type=float, default=0.5, help='channel prune percent')
+    parser.add_argument('--img_size', type=int, default=640, help='inference size (pixels)')
     opt = parser.parse_args()
     print(opt)
 
@@ -27,9 +27,9 @@ if __name__ == '__main__':
     modelyolov5 = torch.load(opt.weights, map_location=device)['model'].float()  # load FP32 model
     copy_weight_v6(modelyolov5, model)
 
-    eval_model = lambda model:test(opt.cfg, opt.data, 
-        weights=opt.weights, 
-        batch_size=16,
+    eval_model = lambda model:test(opt.cfg, opt.data,
+        weights=opt.weights,
+        batch_size=4,
          img_size=img_size,
          iou_thres=0.5,
          conf_thres=0.001,
@@ -58,7 +58,14 @@ if __name__ == '__main__':
     highest_thre = min(highest_thre)
 
     # 找到highest_thre对应的下标对应的百分比
-    percent_limit = (sorted_bn==highest_thre).nonzero().item()/len(bn_weights)
+    if len((sorted_bn == highest_thre).nonzero()) > 1:
+        high_num = (sorted_bn == highest_thre).nonzero()[1]
+    else:
+        high_num = (sorted_bn == highest_thre).nonzero()
+    percent_limit = high_num.item() / len(bn_weights)
+    # 优化好的模型只有一个极值点，上面代码临时使用以方便调试
+    # 找到highest_thre对应的下标对应的百分比
+    # percent_limit = (sorted_bn==highest_thre).nonzero().item()/len(bn_weights)
 
     print(f'Suggested Gamma threshold should be less than {highest_thre:.4f}.')
     print(f'The corresponding prune ratio is {percent_limit:.3f}, but you can set higher.')
