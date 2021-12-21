@@ -21,7 +21,7 @@ PS：在开源数据集和自有数据集上模型均剪枝成功。
 附件：[剪枝后模型](https://drive.google.com/drive/folders/1KJYsVlaB5_3QZB3r0nzJUKYW_oTHW4Pa?usp=sharing)<br>
 ### STEP4:微调finetune 
 附件：[微调训练记录](https://drive.google.com/drive/folders/1AsHG_w--NdSPCV4sPaPYpcOnMyOpNgHx?usp=sharing)<br>
-### STEP4:微调finetune，使用蒸馏技术优化模型，效果由于单纯的微调模型 
+### STEP4:微调finetune，使用蒸馏技术优化模型，效果优于单纯的微调模型 
 附件：[微调蒸馏训练记录](https://drive.google.com/drive/folders/1VDVHwhPReIN5WNLeb-8wnGmZbpe7pc_c?usp=sharing)<br>
 
 ## 剪枝步骤
