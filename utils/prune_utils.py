@@ -3,6 +3,7 @@ from terminaltables import AsciiTable
 from copy import deepcopy
 import numpy as np
 import torch.nn.functional as F
+import os
 
 
 def get_sr_flag(epoch, sr):
@@ -136,7 +137,8 @@ def gather_bn_weights(module_list, prune_idx):
 
 
 def write_cfg(cfg_file, module_defs):
-
+    if not os.path.exists(os.path.split(cfg_file)[0]):
+        os.makedirs(os.path.split(cfg_file)[0])
     with open(cfg_file, 'w') as f:
         for module_def in module_defs:
             f.write(f"[{module_def['type']}]\n")
