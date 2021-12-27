@@ -124,6 +124,119 @@ def copy_weight_v6(modelyolov5,model):
     model.module_list[conv_detect2_idx][0] = detect24.m[1]
     model.module_list[conv_detect3_idx][0] = detect24.m[2]
 
+def copy_weight_v6x(modelyolov5,model):
+    idx=0
+    depth_multiple=1
+    if 'depth_multiple' in modelyolov5.yaml:
+        depth_multiple=modelyolov5.yaml['depth_multiple']
+    conv0 = list(modelyolov5.model.children())[0]
+    idx=copy_conv_idx(conv0, model.module_list[idx],idx)
+    conv1 = list(modelyolov5.model.children())[1]
+    idx=copy_conv_idx(conv1, model.module_list[idx],idx)
+    cspnet2 = list(modelyolov5.model.children())[2]
+    idx=copy_c3(cspnet2,model.module_list,idx, round(3 * depth_multiple))
+    conv3 = list(modelyolov5.model.children())[3]
+    idx=copy_conv_idx(conv3, model.module_list[idx],idx)
+    cspnet4 = list(modelyolov5.model.children())[4]
+    idx = copy_c3(cspnet4, model.module_list,idx, round(6 * depth_multiple))
+    conv5 = list(modelyolov5.model.children())[5]
+    idx=copy_conv_idx(conv5, model.module_list[idx],idx)
+    cspnet6 = list(modelyolov5.model.children())[6]
+    idx = copy_c3(cspnet6, model.module_list,idx, round(9 * depth_multiple))
+    conv7 = list(modelyolov5.model.children())[7]
+    idx=copy_conv_idx(conv7, model.module_list[idx],idx)
+    cspnet8 = list(modelyolov5.model.children())[8]
+    idx = copy_c3(cspnet8, model.module_list,idx, round(3 * depth_multiple))
+    conv9 = list(modelyolov5.model.children())[9]
+    idx = copy_conv_idx(conv9, model.module_list[idx], idx)
+    cspnet10 = list(modelyolov5.model.children())[10]
+    idx = copy_c3(cspnet10, model.module_list, idx, round(3 * depth_multiple))
+    sppf11 = list(modelyolov5.model.children())[11]
+    idx=copy_conv_idx(sppf11.cv1, model.module_list[idx],idx)
+    model.module_list[idx] = sppf11.m
+    idx = idx + 1
+    model.module_list[idx] = sppf11.m
+    idx = idx + 1
+    model.module_list[idx] = sppf11.m
+    idx = idx + 1
+    #route
+    idx = idx + 1
+    idx=copy_conv_idx(sppf11.cv2, model.module_list[idx],idx)
+    conv12 = list(modelyolov5.model.children())[12]
+    idx=copy_conv_idx(conv12, model.module_list[idx],idx)
+    upsample13 = list(modelyolov5.model.children())[13]
+    model.module_list[idx] = upsample13
+    idx = idx + 1
+    #route
+    idx=idx+1
+    cspnet15 = list(modelyolov5.model.children())[15]
+    idx = copy_c3(cspnet15, model.module_list, idx,round(3 * depth_multiple),False)
+    conv16 = list(modelyolov5.model.children())[16]
+    idx=copy_conv_idx(conv16, model.module_list[idx],idx)
+    upsample17 = list(modelyolov5.model.children())[17]
+    model.module_list[idx] = upsample17
+    idx = idx + 1
+    # route
+    idx = idx + 1
+    cspnet19 = list(modelyolov5.model.children())[19]
+    idx = copy_c3(cspnet19, model.module_list, idx,round(3 * depth_multiple), False)
+    conv20 = list(modelyolov5.model.children())[20]
+    idx = copy_conv_idx(conv20, model.module_list[idx], idx)
+    upsample21 = list(modelyolov5.model.children())[21]
+    model.module_list[idx] = upsample21
+    idx = idx + 1
+    # route
+    idx = idx + 1
+    cspnet23 = list(modelyolov5.model.children())[23]
+    idx = copy_c3(cspnet23, model.module_list, idx, round(3 * depth_multiple), False)
+    #conv
+    conv_detect1_idx=idx
+    idx=idx+1
+    #yolo
+    idx=idx+1
+    #route
+    idx=idx+1
+    conv24 = list(modelyolov5.model.children())[24]
+    idx=copy_conv_idx(conv24, model.module_list[idx],idx)
+    # route
+    idx = idx + 1
+    cspnet26 = list(modelyolov5.model.children())[26]
+    idx = copy_c3(cspnet26, model.module_list,idx, round(3 * depth_multiple), False)
+    # conv
+    conv_detect2_idx = idx
+    idx = idx + 1
+    # yolo
+    idx = idx + 1
+    # route
+    idx = idx + 1
+    conv27 = list(modelyolov5.model.children())[27]
+    idx=copy_conv_idx(conv27, model.module_list[idx],idx)
+    # route
+    idx = idx + 1
+    cspnet29 = list(modelyolov5.model.children())[29]
+    idx = copy_c3(cspnet29, model.module_list, idx,round(3 * depth_multiple), False)
+    # conv
+    conv_detect3_idx = idx
+    idx = idx + 1
+    # yolo
+    idx = idx + 1
+    # route
+    idx = idx + 1
+    conv30 = list(modelyolov5.model.children())[30]
+    idx = copy_conv_idx(conv30, model.module_list[idx], idx)
+    # route
+    idx = idx + 1
+    cspnet32 = list(modelyolov5.model.children())[32]
+    idx = copy_c3(cspnet32, model.module_list, idx, round(3 * depth_multiple), False)
+    # conv
+    conv_detect4_idx = idx
+    detect33 = list(modelyolov5.model.children())[33]
+    model.module_list[conv_detect1_idx][0] = detect33.m[0]
+    model.module_list[conv_detect2_idx][0] = detect33.m[1]
+    model.module_list[conv_detect3_idx][0] = detect33.m[2]
+    model.module_list[conv_detect4_idx][0] = detect33.m[3]
+
+
 # def plot_one_box(x, img, color=None, label=None, line_thickness=None):
 #     # Plots one bounding box on image img
 #     tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness

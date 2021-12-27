@@ -9,7 +9,7 @@ from utils.prune_utils import *
 import argparse
 import torchvision
 
-from utils.model_transfer import copy_weight_v6
+from utils.model_transfer import copy_weight_v6,copy_weight_v6x
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -27,7 +27,10 @@ if __name__ == '__main__':
     model = Darknet(opt.cfg, (img_size, img_size)).to(device)
 
     modelyolov5 = torch.load(opt.weights, map_location=device)['model'].float()  # load FP32 model
-    copy_weight_v6(modelyolov5, model)
+    if len(modelyolov5.yaml["anchors"]) == 4:
+        copy_weight_v6x(modelyolov5, model)
+    else:
+        copy_weight_v6(modelyolov5, model)
 
     # model.load_state_dict(torch.load(opt.weights)['model'].state_dict())
 

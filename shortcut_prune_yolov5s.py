@@ -8,7 +8,7 @@ import time
 from utils.prune_utils import *
 import argparse
 
-from utils.model_transfer import copy_weight_v6
+from utils.model_transfer import copy_weight_v6,copy_weight_v6x
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -25,7 +25,10 @@ if __name__ == '__main__':
     model = Darknet(opt.cfg, (img_size, img_size)).to(device)
 
     modelyolov5 = torch.load(opt.weights, map_location=device)['model'].float()  # load FP32 model
-    copy_weight_v6(modelyolov5, model)
+    if len(modelyolov5.yaml["anchors"]) == 4:
+        copy_weight_v6x(modelyolov5, model)
+    else:
+        copy_weight_v6(modelyolov5, model)
 
     eval_model = lambda model:test(model=model,cfg=opt.cfg, data=opt.data, batch_size=4, img_size=img_size)
     obtain_num_parameters = lambda model:sum([param.nelement() for param in model.parameters()])
