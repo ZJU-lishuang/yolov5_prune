@@ -123,6 +123,7 @@ def test(cfg,
          iou_thres=0.5,
          conf_thres=0.001,
          nms_thres=0.5,
+         stride=32.0,
          save_json=False,
          model=None):
     
@@ -154,7 +155,7 @@ def test(cfg,
     names = load_classes(data['names'])  # class names
 
     # Dataloader
-    dataset = LoadImagesAndLabels(test_path, img_size, batch_size)
+    dataset = LoadImagesAndLabels(test_path, img_size, batch_size,stride=stride)
     dataloader = DataLoader(dataset,
                             batch_size=batch_size,
                             num_workers=min([os.cpu_count(), batch_size, 16]),

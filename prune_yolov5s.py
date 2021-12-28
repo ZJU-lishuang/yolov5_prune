@@ -25,8 +25,10 @@ if __name__ == '__main__':
     model = Darknet(opt.cfg, (img_size, img_size)).to(device)
 
     modelyolov5 = torch.load(opt.weights, map_location=device)['model'].float()  # load FP32 model
+    stride=32.0
     if len(modelyolov5.yaml["anchors"]) == 4:
         copy_weight_v6x(modelyolov5, model)
+        stride=64.0
     else:
         copy_weight_v6(modelyolov5, model)
 
@@ -37,6 +39,7 @@ if __name__ == '__main__':
          iou_thres=0.5,
          conf_thres=0.001,
          nms_thres=0.5,
+         stride=stride,
          save_json=False,
          model=model)
     obtain_num_parameters = lambda model:sum([param.nelement() for param in model.parameters()])
