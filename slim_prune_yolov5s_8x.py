@@ -8,8 +8,8 @@ import time
 from utils.prune_utils import *
 import argparse
 import torchvision
-
-from utils.model_transfer import copy_weight_v6,copy_weight_v6x
+import val
+from utils.model_transfer import copy_weight_v6,copy_weight_v6x,copy_weight_v6_reverse,copy_weight_v6x_reverse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -34,12 +34,26 @@ if __name__ == '__main__':
     else:
         copy_weight_v6(modelyolov5, model)
 
+    if len(modelyolov5.yaml["anchors"]) == 4:
+        copy_weight_reverse = copy_weight_v6x_reverse
+    else:
+        copy_weight_reverse = copy_weight_v6_reverse
+
+    eval_modelv2 = lambda model:val.run(opt.data,
+                                       model=model,
+                                       batch_size=4,
+                                       imgsz=img_size,
+                                       plots=False,
+                                       stride = stride)
+
     eval_model = lambda model:test(model=model,cfg=opt.cfg, data=opt.data, batch_size=4, img_size=img_size,stride=stride)
     obtain_num_parameters = lambda model:sum([param.nelement() for param in model.parameters()])
 
     print("\nlet's test the original model first:")
     with torch.no_grad():
-        origin_model_metric = eval_model(model)
+        # origin_model_metric = eval_model(model)
+        copy_weight_reverse(modelyolov5, model)
+        origin_model_metric = eval_modelv2(modelyolov5)
     origin_nparameters = obtain_num_parameters(model)
 
     CBL_idx, Conv_idx, prune_idx, _, _= parse_module_defs2(model.module_defs)
@@ -175,7 +189,9 @@ if __name__ == '__main__':
             bn_module.weight.data.mul_(mask)
 
         with torch.no_grad():
-            mAP = eval_model(model_copy)[0][2]
+            # mAP = eval_model(model_copy)[0][2]
+            copy_weight_reverse(modelyolov5, model_copy)
+            mAP = eval_modelv2(modelyolov5)[0][2]
 
         print(f'mask the gamma as zero, mAP of the model is {mAP:.4f}')
 
@@ -190,7 +206,10 @@ if __name__ == '__main__':
     print("\nnow prune the model but keep size,(actually add offset of BN beta to following layers), let's see how the mAP goes")
 
     with torch.no_grad():
-        eval_model(pruned_model)
+        # eval_model(pruned_model)
+        copy_weight_reverse(modelyolov5, pruned_model)
+        eval_modelv2(modelyolov5)
+
 
     for i in model.module_defs:
         if i['type'] == 'shortcut':
@@ -248,7 +267,10 @@ if __name__ == '__main__':
 
     print('testing the final model...')
     with torch.no_grad():
-        compact_model_metric = eval_model(compact_model)
+        # compact_model_metric = eval_model(compact_model)
+        copy_weight_reverse(modelyolov5, compact_model)
+        compact_model_metric = eval_modelv2(modelyolov5)
+
 
 
     metric_table = [
