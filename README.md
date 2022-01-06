@@ -37,7 +37,7 @@ python train.py --img 640 --batch 16 --epochs 50 --weights weights/yolov5s_v6.pt
 **项目**[yolov5](https://github.com/ZJU-lishuang/yolov5-v6)<br>
 示例代码<br>
 ```
-python train_sparsity.py --img 640 --batch 16 --epochs 50 --data data/coco_hand.yaml --cfg models/yolov5s.yaml --weights runs/train/s_hand/weights/last.pt --name s_hand_sparsity -sr --s 0.001 --prune 1
+python train_sparsity.py --img 640 --batch 16 --epochs 50 --data data/coco_hand.yaml --cfg models/yolov5s.yaml --weights runs/train/s_hand/weights/last.pt --name s_hand_sparsity -sr --scale 0.001 --prune 1
 ```
 
 #### STEP3:通道剪枝策略一
